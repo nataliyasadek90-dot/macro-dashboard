@@ -1,0 +1,83 @@
+{
+  "tickers": [
+    {
+      "name": "黄金",
+      "symbol": "GC=F",
+      "price": "$4,817.49",
+      "change": "+0.02% ↑",
+      "dir": "up"
+    },
+    {
+      "name": "WTI",
+      "symbol": "CL=F",
+      "price": "$96.31",
+      "change": "-0.01% ↓",
+      "dir": "down"
+    },
+    {
+      "name": "布伦特",
+      "symbol": "BZ=F",
+      "price": "$95.01",
+      "change": "-0.03% ↓",
+      "dir": "down"
+    },
+    {
+      "name": "标普500",
+      "symbol": "^GSPC",
+      "price": "6,826.52",
+      "change": "+0.64% ↑",
+      "dir": "up"
+    },
+    {
+      "name": "纳指100",
+      "symbol": "^IXIC",
+      "price": "25,042.73",
+      "change": "+0.56% ↑",
+      "dir": "up"
+    },
+    {
+      "name": "沪深300",
+      "symbol": "000300.SS",
+      "price": "4,566.22",
+      "change": "-0.64% ↓",
+      "dir": "down"
+    },
+    {
+      "name": "10Y美债",
+      "symbol": "^TNX",
+      "price": "3.99%",
+      "change": "—",
+      "dir": "flat"
+    },
+    {
+      "name": "20Y美债",
+      "symbol": "^FXXD",
+      "price": "4.06%",
+      "change": "—",
+      "dir": "flat"
+    },
+    {
+      "name": "VIX",
+      "symbol": "^VIX",
+      "price": "18.19",
+      "change": "+5.51% ↑",
+      "dir": "up"
+    },
+    {
+      "name": "美元指数",
+      "symbol": "DX-Y.NYB",
+      "price": "100.76",
+      "change": "-0.65% ↓",
+      "dir": "down"
+    },
+    {
+      "name": "XLE",
+      "symbol": "XLE",
+      "price": "$60.46",
+      "change": "-0.01% ↓",
+      "dir": "down"
+    }
+  ],
+  "updated_at": "2026-04-10T01:33:48.715300+08:00",
+  "source": "GeoAnalyst · 腾讯证券(美指) / 新浪财经(商品) / FRED / 新浪指数(沪深)"
+}
