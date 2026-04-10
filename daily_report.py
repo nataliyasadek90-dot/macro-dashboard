@@ -425,7 +425,7 @@ def get_news_headlines():
                 if any(kw in title for kw in KEYWORDS_CN):
                     all_items.append({
                         'title': title,
-                        'source': item.get('media_name', '财经要闻'),
+                        'source': item.get('media_name') or '财经要闻',
                         'url': item.get('url', ''),
                         'ctime': int(item.get('ctime', 0))
                     })
