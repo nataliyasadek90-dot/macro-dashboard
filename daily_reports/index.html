@@ -786,7 +786,9 @@ function loadReport(report, navEl) {
       return r.text();
     })
     .then(md => {
-      const html = marked.parse(md);
+      // 移除 [Nav_Summary] 前置字段，防止显示在报告正文
+      const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
+      const html = marked.parse(cleanMd);
       content.innerHTML = `<div class="md-body">${html}</div>`;
     })
     .catch(err => {
