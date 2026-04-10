@@ -379,23 +379,117 @@ def get_csi300():
 
 
 def get_news_headlines():
-    """通过NewsAPI获取当日重要新闻"""
+    """
+    获取当日重要新闻 - 三级兜底（永不失败）：
+    1. 新浪财经财经要闻（免费，无需Key，无限次，主力来源）
+    2. GDELT全球新闻API（免费，无Key，每5秒限1次，英文宏观补充）
+    3. NewsAPI（免费版每天100次，真实最后保底，避免轻易触发）
+    """
+    import time
+
+    # ── 第一级：新浪财经财经要闻（3页，扩展关键词） ──
+    KEYWORDS_CN = [
+        '黄金', '原油', '石油', '通胀', 'CPI', 'PPI', '美联储', '加息', '降息',
+        '地缘', '冲突', '战争', '制裁', 'OPEC', '美债', '纳斯达克', '标普',
+        '沪深', 'A股', '大宗商品', '能源', '天然气', '铜', '原油',
+        '经济', '市场', '汇市', '汇价', '股市', '汇率', '美元', '日元', '欧元',
+        '央行', '鲍威尔', '衰退', '恐慌', 'VIX', '美股',
+        '油价', '金价', '期货', '商品', '小麦', '玉米',
+        '俄乌', '中东', '伊朗', '以色列', '胡塞', '红海', '减产',
+        '议息', '非农', '就业', '零售', 'PMI', 'ISM', 'GDP',
+        '关税', '科技股', 'AI', '英伟达',
+    ]
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://finance.sina.com.cn'}
+
+    all_items = []
+    seen_titles = set()
+
+    # lid=2516 是财经要闻主频道，抓3页（共60条）
+    for page in [1, 2, 3]:
+        try:
+            r = requests.get(
+                'https://feed.mix.sina.com.cn/api/roll/get',
+                params={'pageid': 153, 'lid': 2516, 'num': 20, 'page': page},
+                headers=headers, timeout=8
+            )
+            data = r.json()
+            items = data.get('result', {}).get('data', [])
+            if not items:
+                break
+            for item in items:
+                title = item.get('title', '').strip()
+                if not title or title in seen_titles:
+                    continue
+                if any(kw in title for kw in KEYWORDS_CN):
+                    all_items.append({
+                        'title': title,
+                        'source': item.get('media_name', '财经要闻'),
+                        'url': item.get('url', ''),
+                        'ctime': int(item.get('ctime', 0))
+                    })
+                    seen_titles.add(title)
+        except Exception as e:
+            print(f"  [新浪财经 page={page}] 获取失败: {e}")
+            break
+
+    if len(all_items) >= 3:
+        all_items.sort(key=lambda x: x['ctime'], reverse=True)
+        print(f"  [新浪财经] 获得 {len(all_items)} 条相关新闻")
+        return [{'title': x['title'], 'source': x['source'], 'url': x['url']} for x in all_items[:8]]
+
+    # ── 第二级：GDELT（英文宏观新闻，免费，无需Key） ──
+    print("  [新浪财经] 新闻偏少，尝试 GDELT 英文宏观新闻...")
+    time.sleep(1)  # GDELT 要求每5秒最多1次
+    try:
+        r = requests.get(
+            'https://api.gdeltproject.org/api/v2/doc/doc',
+            params={
+                'format': 'json',
+                'maxrecords': 10,
+                'mode': 'artlist',
+                'query': '(oil OR gold OR inflation OR Fed OR CPI OR geopolitical OR stock market)',
+                'lang': 'English',
+                'sort': 'DateDesc'
+            },
+            timeout=15
+        )
+        gdelt_data = r.json()
+        articles = gdelt_data.get('articles', []) if isinstance(gdelt_data, dict) else []
+        if articles:
+            result = [
+                {'title': a.get('title', ''), 'source': a.get('domain', ''), 'url': a.get('url', '')}
+                for a in articles[:6]
+                if a.get('title')
+            ]
+            if result:
+                print(f"  [GDELT] 补充 {len(result)} 条英文新闻")
+                return result
+    except Exception as e:
+        print(f"  [GDELT] 获取失败: {e}")
+
+    # ── 第三级：NewsAPI（最后保底，有每日100次限制，谨慎使用） ──
+    print("  [GDELT] 无数据，尝试 NewsAPI（此源日限额100次，非必要不触发）...")
     now_cst = datetime.now(CST)
     from_dt = (now_cst - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
     url = (
         f"https://newsapi.org/v2/everything"
-        f"?q=Iran+ceasefire+oil+gold+Fed+CPI+market"
+        f"?q=oil+gold+inflation+Fed+CPI+market+geopolitics"
         f"&from={from_dt}&sortBy=publishedAt"
-        f"&language=en&pageSize=10"
+        f"&language=en&pageSize=8"
         f"&apiKey={NEWS_API_KEY}"
     )
     try:
         r = requests.get(url, timeout=15)
         articles = r.json().get("articles", [])
-        return [
-            {"title": a["title"], "source": a["source"]["name"], "url": a["url"]}
+        result = [
+            {'title': a["title"], 'source': a["source"]["name"], 'url': a["url"]}
             for a in articles[:8] if a.get("title")
         ]
+        if result:
+            print(f"  [NewsAPI] 获得 {len(result)} 条（免费版日限额100次）")
+        return result
     except Exception as e:
         print(f"  [NewsAPI] 获取失败: {e}")
         return []
@@ -638,7 +732,7 @@ CPI基准情景为**路径{cpi['active_path']}**（{cpi['note']}）。
         for h in headlines[:6]:
             md += f"- **{h['source']}**: {h['title']}\n"
     else:
-        md += "- 暂无新闻数据（NewsAPI限额）\n"
+        md += "- 暂无新闻数据（所有新闻源均不可用）\n"
 
     md += f"""
 ---
