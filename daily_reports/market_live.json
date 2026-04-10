@@ -3,23 +3,23 @@
     {
       "name": "黄金",
       "symbol": "GC=F",
-      "price": "$4,765.53",
-      "change": "-0.01% ↓",
+      "price": "$4,774.20",
+      "change": "-0.02% ↓",
       "dir": "down"
     },
     {
       "name": "WTI",
       "symbol": "CL=F",
-      "price": "$98.81",
-      "change": "+0.07% ↑",
+      "price": "$99.76",
+      "change": "+0.02% ↑",
       "dir": "up"
     },
     {
       "name": "布伦特",
       "symbol": "BZ=F",
-      "price": "$96.45",
-      "change": "-0.05% ↓",
-      "dir": "down"
+      "price": "$97.59",
+      "change": "+0.06% ↑",
+      "dir": "up"
     },
     {
       "name": "标普500",
@@ -38,8 +38,8 @@
     {
       "name": "沪深300",
       "symbol": "000300.SS",
-      "price": "4,628.20",
-      "change": "+1.36% ↑",
+      "price": "4,636.57",
+      "change": "+1.54% ↑",
       "dir": "up"
     },
     {
@@ -73,11 +73,11 @@
     {
       "name": "XLE",
       "symbol": "XLE",
-      "price": "$61.96",
-      "change": "+0.07% ↑",
+      "price": "$62.55",
+      "change": "+0.02% ↑",
       "dir": "up"
     }
   ],
-  "updated_at": "2026-04-10T10:35:14.352424+08:00",
+  "updated_at": "2026-04-10T15:19:15.970663+08:00",
   "source": "GeoAnalyst · 腾讯证券(美指) / 新浪财经(商品) / FRED / 新浪指数(沪深)"
 }
