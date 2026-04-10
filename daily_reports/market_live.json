@@ -3,44 +3,44 @@
     {
       "name": "黄金",
       "symbol": "GC=F",
-      "price": "$4,817.49",
-      "change": "+0.02% ↑",
-      "dir": "up"
+      "price": "$4,778.39",
+      "change": "→ 平",
+      "dir": "down"
     },
     {
       "name": "WTI",
       "symbol": "CL=F",
-      "price": "$96.31",
-      "change": "-0.01% ↓",
-      "dir": "down"
+      "price": "$98.72",
+      "change": "+0.04% ↑",
+      "dir": "up"
     },
     {
       "name": "布伦特",
       "symbol": "BZ=F",
-      "price": "$95.01",
-      "change": "-0.03% ↓",
+      "price": "$96.48",
+      "change": "-0.05% ↓",
       "dir": "down"
     },
     {
       "name": "标普500",
       "symbol": "^GSPC",
-      "price": "6,826.52",
-      "change": "+0.64% ↑",
+      "price": "6,824.66",
+      "change": "+0.62% ↑",
       "dir": "up"
     },
     {
       "name": "纳指100",
       "symbol": "^IXIC",
-      "price": "25,042.73",
-      "change": "+0.56% ↑",
+      "price": "25,082.09",
+      "change": "+0.72% ↑",
       "dir": "up"
     },
     {
       "name": "沪深300",
       "symbol": "000300.SS",
-      "price": "4,566.22",
-      "change": "-0.64% ↓",
-      "dir": "down"
+      "price": "4,642.00",
+      "change": "+1.66% ↑",
+      "dir": "up"
     },
     {
       "name": "10Y美债",
@@ -73,11 +73,11 @@
     {
       "name": "XLE",
       "symbol": "XLE",
-      "price": "$60.46",
-      "change": "-0.01% ↓",
-      "dir": "down"
+      "price": "$61.91",
+      "change": "+0.04% ↑",
+      "dir": "up"
     }
   ],
-  "updated_at": "2026-04-10T01:33:48.715300+08:00",
+  "updated_at": "2026-04-10T10:13:00.404599+08:00",
   "source": "GeoAnalyst · 腾讯证券(美指) / 新浪财经(商品) / FRED / 新浪指数(沪深)"
 }
