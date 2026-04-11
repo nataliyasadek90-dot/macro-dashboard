@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GeoAnalyst · 全球宏观策略日报</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js?v=3"></script>
+<script>
+  // 启用 GitHub Flavored Markdown (GFM) - 支持表格渲染
+  marked.use({ gfm: true, breaks: false });
+</script>
 <style>
   :root {
     --bg: #0d1117;
@@ -604,29 +608,127 @@
 // ─── 日报数据配置 ───
 const REPORTS = [
   {
+
+
+
+    date: '20260411',
+
+
+
+    displayDate: '2026年04月11日',
+
+
+
+    weekday: '周六',
+
+
+
+    summary: 'CPI路径B·等待数据',
+
+
+
+    badge: 'badge-yellow',
+
+
+
+    panicIndex: 52,
+
+
+
+    panicDelta: '自动生成',
+
+
+
+    panicLevel: 'medium',
+
+
+
+    panicLevelText: '中高风险',
+
+
+
+    pathProbs: [35, 42, 23],
+
+
+
+    activeFile: 'daily_report_20260411.md'
+
+
+
+  },
+  {
+
+
+
+    date: '20260411',
+
+
+
+    displayDate: '2026年04月11日',
+
+
+
+    weekday: '周六',
+
+
+
+    summary: 'CPI超预期3.3%·路径C边界触发',
+
+
+
+    badge: 'badge-yellow',
+
+
+
+    panicIndex: 52,
+
+
+
+    panicDelta: '自动生成',
+
+
+
+    panicLevel: 'medium',
+
+
+
+    panicLevelText: '中高风险',
+
+
+
+    pathProbs: [35, 42, 23],
+
+
+
+    activeFile: 'daily_report_20260411.md'
+
+
+
+  },,
+  {
     date: '20260410',
     displayDate: '2026年04月10日',
     weekday: '周五',
-    summary: '当前 Panic Index 为 43，风险等级：🟢 中等风险。',
+    summary: 'CPI今晚发布·市场整固·等待数据定方向',
     badge: 'badge-yellow',
-    panicIndex: 43,
-    panicDelta: '自动生成',
-    panicLevel: 'low',
-    panicLevelText: '中等风险',
-    pathProbs: [35, 42, 23],
+    panicIndex: 48,
+    panicDelta: '-7',
+    panicLevel: 'medium',
+    panicLevelText: '中高风险',
+    pathProbs: [35, 40, 25],
     activeFile: 'daily_report_20260410.md'
   },
   {
     date: '20260409',
     displayDate: '2026年4月9日',
     weekday: '周四',
-    summary: '停火遭质疑 · 油价反弹 · CPI前夜',
+    summary: '停火余波消化·CPI前夜·市场整固观望',
     badge: 'badge-yellow',
-    panicIndex: 72,
-    panicDelta: '+10',
-    panicLevel: 'high',
+    panicIndex: 55,
+    panicDelta: '-7',
+    panicLevel: 'medium',
     panicLevelText: '中高风险',
-    pathProbs: [35, 42, 23],
+    pathProbs: [35, 40, 25],
     activeFile: 'daily_report_20260409.md'
   },
   {
@@ -676,7 +778,7 @@ let liveTickers = [];  // 实时行情数组，由 fetchMarketLive() 填充
 // ─── 实时行情：每60秒从 market_live.json 拉取 ───
 async function fetchMarketLive() {
   try {
-    const resp = await fetch('daily_reports/market_live.json?_=' + Date.now(), { cache: 'no-store' });
+    const resp = await fetch('market_live.json?_=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     liveTickers = data.assets || data.tickers || [];
@@ -780,13 +882,15 @@ function loadReport(report, navEl) {
   const content = document.getElementById('mainContent');
   content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><div>加载中...</div></div>`;
 
-  fetch('daily_reports/' + report.activeFile)
+  fetch(report.activeFile)
     .then(r => {
       if (!r.ok) throw new Error('文件加载失败');
       return r.text();
     })
     .then(md => {
-      const html = marked.parse(md);
+      // 移除 [Nav_Summary] 前置字段，防止显示在报告正文
+      const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
+      const html = marked.parse(cleanMd);
       content.innerHTML = `<div class="md-body">${html}</div>`;
     })
     .catch(err => {
