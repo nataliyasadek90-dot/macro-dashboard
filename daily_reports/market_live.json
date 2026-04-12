@@ -1,83 +1,68 @@
 {
-  "tickers": [
+  "updated": "2026-04-12 09:10 CST",
+  "assets": [
     {
       "name": "黄金",
-      "symbol": "GC=F",
-      "price": "$4,768.99",
-      "change": "-0.04% ↓",
-      "dir": "down"
-    },
-    {
-      "name": "WTI",
-      "symbol": "CL=F",
-      "price": "$95.62",
-      "change": "→ 平",
-      "dir": "down"
+      "price": "4,772.90",
+      "unit": "USD/oz",
+      "chg": "-0.94%",
+      "up": false
     },
     {
       "name": "布伦特",
-      "symbol": "BZ=F",
-      "price": "$94.25",
-      "change": "-0.01% ↓",
-      "dir": "down"
+      "price": "94.26",
+      "unit": "USD/桶",
+      "chg": "-0.01%",
+      "up": false
+    },
+    {
+      "name": "WTI",
+      "price": "99.77",
+      "unit": "USD/桶",
+      "chg": "+1.94%",
+      "up": true
     },
     {
       "name": "标普500",
-      "symbol": "^GSPC",
-      "price": "6,816.89",
-      "change": "-0.11% ↓",
-      "dir": "down"
+      "price": "6,824.66",
+      "unit": "点",
+      "chg": "+0.62%",
+      "up": true
     },
     {
-      "name": "纳指100",
-      "symbol": "^IXIC",
-      "price": "25,116.34",
-      "change": "+0.14% ↑",
-      "dir": "up"
+      "name": "纳斯达克",
+      "price": "22,822.42",
+      "unit": "点",
+      "chg": "+0.83%",
+      "up": true
     },
     {
       "name": "沪深300",
-      "symbol": "000300.SS",
       "price": "4,636.57",
-      "change": "+1.54% ↑",
-      "dir": "up"
-    },
-    {
-      "name": "10Y美债",
-      "symbol": "^TNX",
-      "price": "3.99%",
-      "change": "—",
-      "dir": "flat"
-    },
-    {
-      "name": "20Y美债",
-      "symbol": "^FXXD",
-      "price": "4.06%",
-      "change": "—",
-      "dir": "flat"
+      "unit": "点[CNY]",
+      "chg": "+1.54%",
+      "up": true
     },
     {
       "name": "VIX",
-      "symbol": "^VIX",
-      "price": "18.19",
-      "change": "+5.51% ↑",
-      "dir": "up"
+      "price": "19.49",
+      "unit": "",
+      "chg": "-7.37%",
+      "up": false
+    },
+    {
+      "name": "10Y美债",
+      "price": "4.29%",
+      "unit": "",
+      "chg": "0.00%",
+      "up": false
     },
     {
       "name": "美元指数",
-      "symbol": "DX-Y.NYB",
-      "price": "N/A",
-      "change": "→ 平",
-      "dir": "down"
-    },
-    {
-      "name": "XLE",
-      "symbol": "XLE",
-      "price": "$60.02",
-      "change": "→ 平",
-      "dir": "down"
+      "price": "103.2",
+      "unit": "",
+      "chg": "-0.30%",
+      "up": false
     }
-  ],
-  "updated_at": "2026-04-12T09:02:02.258261+08:00",
-  "source": "GeoAnalyst · 腾讯证券(美指) / 新浪财经(商品) / FRED / 新浪指数(沪深)"
+  ]
 }
