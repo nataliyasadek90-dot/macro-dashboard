@@ -543,9 +543,9 @@
       </div>
     </div>
 
-    <!-- 实时市场 -->
+    <!-- 市场最新收盘价 -->
     <div class="panel-section">
-      <div class="panel-title">📊 实时市场</div>
+      <div class="panel-title">📊 市场最新收盘价</div>
       <div class="market-grid" id="marketGrid">
         <!-- 由JS填充 -->
       </div>
@@ -742,10 +742,10 @@ const REPORTS = [
 let currentReport = REPORTS[0];
 let liveTickers = [];  // 实时行情数组，由 fetchMarketLive() 填充
 
-// ─── 实时行情：每60秒从 market_live.json 拉取 ───
+// ─── 收盘行情：从 market_live.json 加载（每日日报生成时更新）───
 async function fetchMarketLive() {
   try {
-    const resp = await fetch('market_live.json?_=' + Date.now(), { cache: 'no-store' });
+    const resp = await fetch('market_live.json');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     liveTickers = data.assets || data.tickers || [];
@@ -754,15 +754,12 @@ async function fetchMarketLive() {
     renderMarketGrid(liveTickers);
 
     // 更新时间戳
-    const updatedTs = data.timestamp || data.updated_at;
+    const updatedTs = data.updated || data.timestamp || data.updated_at;
     if (updatedTs) {
-      const t = new Date(updatedTs);
-      const cst = t.toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
-      document.getElementById('lastUpdate').textContent = cst + ' CST';
+      document.getElementById('lastUpdate').textContent = updatedTs + ' 更新';
     }
   } catch (e) {
-    console.warn('[market_live] 获取失败，将显示上次缓存:', e.message);
-    // 如果已有缓存，保持显示
+    console.warn('[market_live] 获取失败:', e.message);
     if (liveTickers.length === 0) {
       document.getElementById('tickerTrack').innerHTML =
         '<span style="color:var(--yellow);font-size:0.78rem;">⚠️ 行情加载失败，请确认日报脚本已运行</span>';
@@ -788,16 +785,18 @@ function renderTicker(tickers) {
   document.getElementById('tickerTrack').innerHTML = html + html;
 }
 
-// ─── 渲染右侧实时市场网格（N/A 值灰化处理）───
+// ─── 渲染右侧市场网格（展示收盘价）───
 function renderMarketGrid(tickers) {
   const grid = document.getElementById('marketGrid');
   grid.innerHTML = tickers.map(m => {
     const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
+    const change = m.change || m.chg || '--';
+    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
     return `
     <div class="market-card" style="${isNA ? 'opacity:0.35' : ''}">
       <div class="mc-name">${m.name}</div>
       <div class="mc-price">${isNA ? '--' : m.price}</div>
-      <div class="mc-change ${m.dir}">${m.change}</div>
+      <div class="mc-change ${dir}">${change}</div>
     </div>
   `}).join('');
 }
@@ -807,9 +806,8 @@ function init() {
   buildNavList();
   startClock();
   loadReport(REPORTS[0]);
-  // 立即拉取一次 + 之后每60秒轮询
+  // 加载每日收盘价（固定数据，由日报脚本每日更新）
   fetchMarketLive();
-  setInterval(fetchMarketLive, 60000);
 }
 
 // ─── 时钟 ───
