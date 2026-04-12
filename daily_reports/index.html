@@ -775,11 +775,13 @@ function renderTicker(tickers) {
   if (!tickers.length) return;
   const html = tickers.map(m => {
     const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
+    const change = m.change || m.chg || '--';
+    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
     return `
     <span class="ticker-item" style="${isNA ? 'opacity:0.35' : ''}">
       <span class="ticker-name">${m.name}</span>
       <span class="ticker-price">${isNA ? '--' : m.price}</span>
-      <span class="ticker-change ${m.dir}">${m.change}</span>
+      <span class="ticker-change ${dir}">${change}</span>
     </span>
     <span class="ticker-divider">|</span>
   `}).join('');
