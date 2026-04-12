@@ -543,9 +543,9 @@
       </div>
     </div>
 
-    <!-- 市场最新收盘价 -->
+    <!-- 实时市场 -->
     <div class="panel-section">
-      <div class="panel-title">📊 市场最新收盘价</div>
+      <div class="panel-title">📊 实时市场</div>
       <div class="market-grid" id="marketGrid">
         <!-- 由JS填充 -->
       </div>
@@ -626,7 +626,7 @@ const REPORTS = [
 
 
 
-    summary: 'CPI路径C确认·停火谈判启动·PPI前夜',
+    summary: 'CPI路径C触发·PPI情景矩阵',
 
 
 
@@ -703,12 +703,12 @@ const REPORTS = [
     displayDate: '2026年4月8日',
     weekday: '周三',
     summary: '历史性停火生效 · 原油暴跌14%',
-    badge: 'badge-green',
-    panicIndex: 39,
-    panicDelta: '-49',
-    panicLevel: 'low',
-    panicLevelText: '低风险',
-    pathProbs: [45, 40, 15],
+    badge: 'badge-yellow',
+    panicIndex: 62,
+    panicDelta: '-26',
+    panicLevel: 'medium',
+    panicLevelText: '中高风险',
+    pathProbs: [40, 40, 20],
     activeFile: 'daily_report_20260408.md'
   },
   {
@@ -742,10 +742,10 @@ const REPORTS = [
 let currentReport = REPORTS[0];
 let liveTickers = [];  // 实时行情数组，由 fetchMarketLive() 填充
 
-// ─── 收盘行情：从 market_live.json 加载（每日日报生成时更新）───
+// ─── 实时行情：每60秒从 market_live.json 拉取 ───
 async function fetchMarketLive() {
   try {
-    const resp = await fetch('market_live.json');
+    const resp = await fetch('market_live.json?_=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     liveTickers = data.assets || data.tickers || [];
@@ -754,12 +754,15 @@ async function fetchMarketLive() {
     renderMarketGrid(liveTickers);
 
     // 更新时间戳
-    const updatedTs = data.updated || data.timestamp || data.updated_at;
+    const updatedTs = data.timestamp || data.updated_at;
     if (updatedTs) {
-      document.getElementById('lastUpdate').textContent = updatedTs + ' 更新';
+      const t = new Date(updatedTs);
+      const cst = t.toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+      document.getElementById('lastUpdate').textContent = cst + ' CST';
     }
   } catch (e) {
-    console.warn('[market_live] 获取失败:', e.message);
+    console.warn('[market_live] 获取失败，将显示上次缓存:', e.message);
+    // 如果已有缓存，保持显示
     if (liveTickers.length === 0) {
       document.getElementById('tickerTrack').innerHTML =
         '<span style="color:var(--yellow);font-size:0.78rem;">⚠️ 行情加载失败，请确认日报脚本已运行</span>';
@@ -772,31 +775,27 @@ function renderTicker(tickers) {
   if (!tickers.length) return;
   const html = tickers.map(m => {
     const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
-    const change = m.change || m.chg || '--';
-    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
     return `
     <span class="ticker-item" style="${isNA ? 'opacity:0.35' : ''}">
       <span class="ticker-name">${m.name}</span>
       <span class="ticker-price">${isNA ? '--' : m.price}</span>
-      <span class="ticker-change ${dir}">${change}</span>
+      <span class="ticker-change ${m.dir}">${m.change}</span>
     </span>
     <span class="ticker-divider">|</span>
   `}).join('');
   document.getElementById('tickerTrack').innerHTML = html + html;
 }
 
-// ─── 渲染右侧市场网格（展示收盘价）───
+// ─── 渲染右侧实时市场网格（N/A 值灰化处理）───
 function renderMarketGrid(tickers) {
   const grid = document.getElementById('marketGrid');
   grid.innerHTML = tickers.map(m => {
     const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
-    const change = m.change || m.chg || '--';
-    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
     return `
     <div class="market-card" style="${isNA ? 'opacity:0.35' : ''}">
       <div class="mc-name">${m.name}</div>
       <div class="mc-price">${isNA ? '--' : m.price}</div>
-      <div class="mc-change ${dir}">${change}</div>
+      <div class="mc-change ${m.dir}">${m.change}</div>
     </div>
   `}).join('');
 }
@@ -806,8 +805,9 @@ function init() {
   buildNavList();
   startClock();
   loadReport(REPORTS[0]);
-  // 加载每日收盘价（固定数据，由日报脚本每日更新）
+  // 立即拉取一次 + 之后每60秒轮询
   fetchMarketLive();
+  setInterval(fetchMarketLive, 60000);
 }
 
 // ─── 时钟 ───
@@ -861,11 +861,8 @@ function loadReport(report, navEl) {
       content.innerHTML = `<div class="md-body">${html}</div>`;
     })
     .catch(err => {
-      // 如果文件加载失败，显示友好错误
-      content.innerHTML = `<div class="md-body" style="text-align:center;padding:40px;color:var(--text-muted)">
-        <p>📡 日报加载失败</p>
-        <p style="font-size:14px">请检查网络连接后刷新重试</p>
-      </div>`;
+      // 如果文件不可访问，使用内嵌内容
+      content.innerHTML = getInlineContent(report);
     });
 }
 
@@ -885,7 +882,83 @@ function updateRightPanel(report) {
   document.getElementById('pathC').innerHTML = `C路径<br><small>${pc}%</small>`;
 }
 
-// ─── 日报从 MD 文件动态加载，不再使用硬编码内容 ───
+// ─── 内嵌内容（降级方案）───
+function getInlineContent(report) {
+  const summaries = {
+    '20260406': `<div class="md-body">
+      <h1>📊 策略日报 | 2026年4月6日</h1>
+      <blockquote>数据窗口：2026年4月5日 09:00 → 2026年4月6日 09:00</blockquote>
+      <h2>🔥 核心结论</h2>
+      <blockquote>地缘博弈关键节点 · 停火谈判72小时倒计时</blockquote>
+      <p>美伊对峙进入第5周，S&P 500在多空拉锯中微涨<strong>0.44%</strong>至6,611.83。特朗普政府释放调解信号，但伊朗方面立场仍强硬，霍尔木兹海峡封锁带来的供给压力持续主导能源市场。VIX维持24.17，市场保持高度警惕。</p>
+      <h2>📊 关键数据</h2>
+      <table><thead><tr><th>资产</th><th>价格</th><th>涨跌</th></tr></thead>
+      <tbody>
+      <tr><td>🥇 黄金</td><td>~$4,600</td><td>+0.5%</td></tr>
+      <tr><td>🛢️ WTI原油</td><td>~$112</td><td>+0.3%</td></tr>
+      <tr><td>📈 S&P 500</td><td><strong>6,611.83</strong></td><td><strong>+0.44%</strong></td></tr>
+      <tr><td>📉 VIX</td><td><strong>24.17</strong></td><td>-0.5</td></tr>
+      </tbody></table>
+      <h2>🔥 Panic_Index: 85（高）</h2>
+      <p>地缘风险（霍尔木兹封锁第5周）驱动恐慌维持高位。路径B（CPI 3.0-3.3%，概率40%）为基准情景。</p>
+    </div>`,
+    '20260407': `<div class="md-body">
+      <h1>📊 策略日报 | 2026年4月7日</h1>
+      <blockquote>数据窗口：2026年4月6日 09:00 → 2026年4月7日 09:00</blockquote>
+      <h2>🔥 核心结论</h2>
+      <blockquote>停火谈判悬而未决 · VIX飙升至25.78 · 市场神经高度紧绷</blockquote>
+      <p>特朗普4月7日晚8点EDT截止时刻临近，S&P500仅勉强收涨<strong>0.08%</strong>，VIX飙升至<strong>25.78</strong>（阶段新高）。WTI一度冲至$113.5，停火消息仍未落地。</p>
+      <h2>📊 关键数据</h2>
+      <table><thead><tr><th>资产</th><th>价格</th><th>涨跌</th></tr></thead>
+      <tbody>
+      <tr><td>🛢️ WTI原油</td><td><strong>$112.95</strong></td><td>+0.5%</td></tr>
+      <tr><td>🛢️ 布伦特</td><td><strong>$109.62</strong></td><td>-0.1%</td></tr>
+      <tr><td>📈 S&P 500</td><td><strong>6,616.85</strong></td><td><strong>+0.08%</strong></td></tr>
+      <tr><td>📉 VIX</td><td><strong>25.78</strong></td><td><strong>+6.2% 🔴</strong></td></tr>
+      </tbody></table>
+      <h2>🔥 Panic_Index: 88（极高）↑+3</h2>
+      <p>截止期限恐慌驱动VIX飙升至阶段新高。建议降低杠杆，增加现金缓冲。</p>
+    </div>`,
+    '20260408': `<div class="md-body">
+      <h1>📊 策略日报 | 2026年4月8日</h1>
+      <blockquote>数据窗口：2026年4月7日 09:00 → 2026年4月8日 09:00</blockquote>
+      <h2>🔥 核心结论</h2>
+      <blockquote>🚨 历史性转折：美伊停火生效 · 原油暴跌14% · 策略框架重构</blockquote>
+      <p>特朗普宣布与伊朗达成<strong>2周临时停火协议</strong>，霍尔木兹海峡将逐步恢复通航。WTI原油暴跌<strong>-16.4%</strong>至$94.41，道指大涨<strong>1325点</strong>（+2.8%），S&P500收6,782.81。</p>
+      <h2>📊 关键数据</h2>
+      <table><thead><tr><th>资产</th><th>收盘价</th><th>涨跌</th></tr></thead>
+      <tbody>
+      <tr><td>🥇 黄金</td><td><strong>$4,830</strong></td><td><strong>+3.3%</strong></td></tr>
+      <tr><td>🛢️ WTI原油</td><td><strong>$94.41</strong></td><td><strong>-16.4% ↓↓</strong></td></tr>
+      <tr><td>📈 S&P 500</td><td><strong>6,782.81</strong></td><td><strong>+2.50%</strong></td></tr>
+      <tr><td>📉 VIX</td><td><strong>21.04</strong></td><td><strong>-18.4%</strong></td></tr>
+      </tbody></table>
+      <h2>🔥 Panic_Index: 62（中高）↓-26</h2>
+      <p>停火利好释放，地缘因子大幅回落。但2周临时停火后谈判风险仍存，建议保留现金缓冲。</p>
+    </div>`,
+    '20260409': `<div class="md-body">
+      <h1>📊 策略日报 | 2026年4月9日</h1>
+      <blockquote>数据窗口：2026年4月8日 09:00 → 2026年4月9日 09:00</blockquote>
+      <h2>🔥 核心结论</h2>
+      <blockquote>⚠️ 停火协议遭质疑 · 油价急速反弹 · 明日CPI是最终裁决</blockquote>
+      <p>停火协议墨迹未干，伊朗指控美方违反协议。WTI原油从$94急速反弹接近$116，布伦特突破$111。FOMC纪要偏鹰，降息时间表推迟至9月。明日（4月10日）美国3月CPI是关键验证。</p>
+      <h2>📊 关键数据（4月9日）</h2>
+      <table><thead><tr><th>资产</th><th>价格</th><th>涨跌</th></tr></thead>
+      <tbody>
+      <tr><td>🥇 黄金</td><td><strong>$4,769.72</strong></td><td>+1.03%</td></tr>
+      <tr><td>🛢️ WTI原油</td><td><strong>~$99-116</strong></td><td>急速反弹 ↑↑</td></tr>
+      <tr><td>📈 S&P 500</td><td><strong>~6,784</strong></td><td>+0.02%</td></tr>
+      <tr><td>📉 VIX</td><td><strong>20.87</strong></td><td>-0.8%</td></tr>
+      <tr><td>💵 美元指数</td><td><strong>99.05</strong></td><td>-1.1%</td></tr>
+      </tbody></table>
+      <h2>🔮 CPI最终校准（明日验证）</h2>
+      <p>路径B（3.0%-3.3%，概率42%）为基准。3月WTI均价约$108，能源分项预计贡献+0.6-0.8pp，路径B最可能。</p>
+      <h2>🔥 Panic_Index: 72（中高）↑+10</h2>
+      <p>停火遭质疑叠加CPI前夜不确定性，恐慌指数反弹。建议CPI发布前保留充足现金。</p>
+    </div>`
+  };
+  return summaries[report.date] || `<div class="loading"><p style="color:var(--text-muted)">内容暂不可用</p></div>`;
+}
 
 // ─── 启动 ───
 window.addEventListener('load', init);
