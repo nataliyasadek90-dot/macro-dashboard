@@ -1,0 +1,79 @@
+{
+  "date": "2026-04-12",
+  "panic": 39,
+  "assets": {
+    "黄金": {
+      "price": 4768.99,
+      "prev_close": 4770.7,
+      "change_pct": -0.04,
+      "symbol": "hf_GC"
+    },
+    "WTI原油": {
+      "price": 95.62,
+      "prev_close": 95.62,
+      "change_pct": -0.0,
+      "symbol": "hf_CL"
+    },
+    "布伦特原油": {
+      "price": 94.25,
+      "prev_close": 94.26,
+      "change_pct": -0.01,
+      "symbol": "hf_OIL"
+    },
+    "白银": {
+      "price": 76.12,
+      "prev_close": 76.0,
+      "change_pct": 0.16,
+      "symbol": "hf_SI"
+    },
+    "伦铜": {
+      "price": 587.55,
+      "prev_close": 586.75,
+      "change_pct": 0.14,
+      "symbol": "hf_HG"
+    },
+    "天然气": {
+      "price": 2.65,
+      "prev_close": 2.65,
+      "change_pct": -0.04,
+      "symbol": "hf_NG"
+    },
+    "纳斯达克": {
+      "price": 25116.34,
+      "prev_close": 25082.09,
+      "change_pct": 0.14,
+      "symbol": "usNDX"
+    },
+    "S&P500": {
+      "price": 6816.89,
+      "prev_close": 6824.66,
+      "change_pct": -0.11,
+      "symbol": "usINX"
+    },
+    "VIX": {
+      "price": 18.19,
+      "prev_close": 17.24,
+      "change_pct": 5.51,
+      "symbol": "VIXCLS"
+    },
+    "美元指数": {
+      "price": null,
+      "change_pct": 0,
+      "symbol": "DTWEXBGS"
+    },
+    "沪深300": {
+      "price": 4636.57,
+      "prev_close": 4566.25,
+      "change_pct": 1.54,
+      "symbol": "s_sh000300"
+    },
+    "XLE能源": {
+      "price": 60.02,
+      "prev_close": 60.02,
+      "change_pct": 0.0,
+      "symbol": "XLE_est"
+    }
+  },
+  "md_file": "daily_report_20260412.md",
+  "generated": "2026-04-12T09:01:52.276878+08:00"
+}
