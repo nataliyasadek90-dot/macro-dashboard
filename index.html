@@ -862,39 +862,25 @@ function loadReport(report, navEl) {
   const content = document.getElementById('mainContent');
   content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><div>加载中...</div></div>`;
 
-  // 使用 GitHub API 获取完整内容（绕过 Pages 文件大小限制）
-  const filename = report.activeFile.split('/').pop();
-  const apiUrl = `https://api.github.com/repos/nataliyasadek90-dot/macro-dashboard/contents/daily_reports/${filename}`;
-  
-  fetch(apiUrl)
+  // 直接加载 .md 文件（GitHub Pages 现在正确服务未渲染的源文件）
+  fetch(report.activeFile + '?raw=' + Date.now())
     .then(r => {
-      if (!r.ok) throw new Error('API 请求失败');
-      return r.json();
+      if (!r.ok) throw new Error('文件加载失败');
+      return r.text();
     })
-    .then(data => {
-      // 解码 base64 内容
-      const md = atob(data.content);
+    .then(md => {
       // 移除 [Nav_Summary] 前置字段，防止显示在报告正文
       const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
       const html = marked.parse(cleanMd);
       content.innerHTML = `<div class="md-body">${html}</div>`;
     })
-    .catch(err => {
-      // 如果 API 失败，尝试直接加载文件
-      fetch(report.activeFile)
-        .then(r => r.text())
-        .then(md => {
-          const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
-          const html = marked.parse(cleanMd);
-          content.innerHTML = `<div class="md-body">${html}</div>`;
-        })
-        .catch(() => {
-          content.innerHTML = `<div class="md-body" style="text-align:center;padding:40px;color:var(--text-muted)">
-            <p>📡 日报加载失败</p>
-            <p style="font-size:0.85rem;margin-top:10px">${report.title}</p>
-            <p style="font-size:0.75rem;margin-top:5px">请检查网络连接后刷新重试</p>
-          </div>`;
-        });
+    .catch(() => {
+      // 如果失败，显示友好错误
+      content.innerHTML = `<div class="md-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+        <p>📡 日报加载失败</p>
+        <p style="font-size:0.85rem;margin-top:10px">${report.title}</p>
+        <p style="font-size:0.75rem;margin-top:5px">请检查网络连接后刷新重试</p>
+      </div>`;
     });
 }
         <p style="font-size:14px">请检查网络连接后刷新重试</p>
