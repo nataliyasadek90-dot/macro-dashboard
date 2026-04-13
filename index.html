@@ -1,10 +1,907 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta http-equiv="refresh" content="0; url=daily_reports/">
-    <title>Redirecting...</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>GeoAnalyst · 全球宏观策略日报</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js?v=3.1.2"></script>
+<script>
+  // 启用 GitHub Flavored Markdown (GFM) - 支持表格渲染
+  marked.use({ gfm: true, breaks: false });
+</script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f0a500;
+    --accent2: #58a6ff;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --red: #f85149;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --blue: #58a6ff;
+    --panel: #1c2128;
+    --up: #f85149;    /* 中国股市：涨=红 */
+    --down: #3fb950;  /* 中国股市：跌=绿 */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .topbar-brand .globe { font-size: 1.4rem; }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .live-badge {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ─── TICKER BAR ─── */
+  .ticker-bar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 32px;
+    animation: scroll-left 60s linear infinite;
+    white-space: nowrap;
+    padding: 0 24px;
+  }
+
+  .ticker-track:hover { animation-play-state: paused; }
+
+  @keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    cursor: default;
+  }
+
+  .ticker-name { color: var(--text-muted); font-weight: 500; }
+  .ticker-price { color: var(--text); font-weight: 700; }
+  .ticker-change.up { color: var(--up); }
+  .ticker-change.down { color: var(--down); }
+  .ticker-change.flat { color: var(--text-muted); }
+  .ticker-divider { color: var(--border); }
+
+  /* ─── MAIN LAYOUT ─── */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    gap: 0;
+    min-height: calc(100vh - 100px);
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow-y: auto;
+    position: sticky;
+    top: 100px;
+    height: calc(100vh - 100px);
+  }
+
+  .sidebar-title {
+    padding: 0 20px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .nav-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .nav-item:hover {
+    background: var(--surface2);
+    border-left-color: var(--accent2);
+  }
+
+  .nav-item.active {
+    background: rgba(88, 166, 255, 0.08);
+    border-left-color: var(--accent);
+  }
+
+  .nav-date {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .nav-item.active .nav-date { color: var(--accent); }
+
+  .nav-summary {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .nav-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-top: 2px;
+  }
+
+  .badge-red { background: rgba(248, 81, 73, 0.2); color: var(--red); }
+  .badge-yellow { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
+  .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--green); }
+
+  /* ─── CONTENT ─── */
+  .content {
+    padding: 32px;
+    overflow-y: auto;
+    max-width: 900px;
+  }
+
+  .report-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .report-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .report-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .report-lead {
+    font-size: 1rem;
+    color: var(--accent);
+    font-weight: 500;
+    padding: 10px 16px;
+    background: rgba(240, 165, 0, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 16px;
+  }
+
+  /* ─── MARKDOWN RENDERING ─── */
+  .md-body h1 { font-size: 1.4rem; color: var(--text); margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .md-body h2 { font-size: 1.15rem; color: var(--accent2); margin: 24px 0 10px; display: flex; align-items: center; gap: 6px; }
+  .md-body h3 { font-size: 1rem; color: var(--text); margin: 18px 0 8px; }
+  .md-body p { line-height: 1.75; margin: 8px 0; color: var(--text); }
+  .md-body strong { color: var(--accent); }
+  .md-body em { color: var(--text-muted); font-style: italic; }
+
+  .md-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 0.85rem;
+  }
+
+  .md-body th {
+    background: var(--surface2);
+    padding: 8px 12px;
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .md-body td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .md-body tr:hover td { background: var(--surface2); }
+
+  .md-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin: 12px 0;
+    background: rgba(240, 165, 0, 0.06);
+    border-radius: 0 6px 6px 0;
+    color: var(--text);
+  }
+
+  .md-body code {
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #f0a500;
+    font-family: 'SF Mono', Consolas, monospace;
+  }
+
+  .md-body pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+
+  .md-body pre code {
+    background: none;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 0.83rem;
+    line-height: 1.8;
+  }
+
+  .md-body ul, .md-body ol {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+
+  .md-body li { margin: 4px 0; line-height: 1.7; }
+  .md-body hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* ─── RIGHT PANEL ─── */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 20px;
+    overflow-y: auto;
+    position: sticky;
+    top: 100px;
+    height: calc(100vh - 100px);
+  }
+
+  .panel-section {
+    margin-bottom: 24px;
+  }
+
+  .panel-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  /* ─── MARKET CARDS ─── */
+  .market-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .market-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .market-card:hover { border-color: var(--accent2); }
+
+  .market-card .mc-name {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .market-card .mc-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .market-card .mc-change {
+    font-size: 0.72rem;
+    margin-top: 2px;
+  }
+
+  .mc-change.up { color: var(--up); }
+  .mc-change.down { color: var(--down); }
+  .mc-change.flat { color: var(--text-muted); }
+
+  /* ─── PANIC INDEX ─── */
+  .panic-display {
+    text-align: center;
+    padding: 16px;
+    background: var(--panel);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .panic-value {
+    font-size: 2.8rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .panic-value.high { color: var(--red); }
+  .panic-value.medium { color: var(--yellow); }
+  .panic-value.low { color: var(--green); }
+
+  .panic-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .panic-bar-wrap {
+    margin-top: 10px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .panic-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+    background: linear-gradient(90deg, #3fb950, #d29922, #f85149);
+  }
+
+  /* ─── PATH INDICATOR ─── */
+  .path-indicator {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .path-btn {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-muted);
+  }
+
+  .path-btn.active-path {
+    border-color: var(--accent);
+    background: rgba(240, 165, 0, 0.12);
+    color: var(--accent);
+  }
+
+  /* ─── LOADING ─── */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1200px) {
+    .layout { grid-template-columns: 240px 1fr; }
+    .right-panel { display: none; }
+  }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .content { padding: 16px; }
+  }
+</style>
 </head>
 <body>
-    <p>Redirecting to <a href="daily_reports/">Daily Reports</a>...</p>
+
+<!-- ─── TOP BAR ─── -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="globe">🌍</span>
+    <span>GeoAnalyst · 全球宏观策略日报</span>
+    <span class="live-badge">LIVE</span>
+  </div>
+  <div class="topbar-right">
+    <span id="clock">--:--</span>
+    <span>北京时间</span>
+  </div>
+</div>
+
+<!-- ─── TICKER BAR ─── -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickerTrack">
+    <!-- 由 JS fetch('market_live.json') 动态渲染 -->
+    <span style="color:var(--text-muted); font-size:0.78rem;">📡 加载行情中...</span>
+  </div>
+</div>
+
+<!-- ─── MAIN LAYOUT ─── -->
+<div class="layout">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sidebar-title">📅 历史日报</div>
+    <div id="navList">
+      <!-- 由JS动态生成 -->
+    </div>
+  </aside>
+
+  <!-- ─── CONTENT ─── -->
+  <main class="content" id="mainContent">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div>正在加载日报...</div>
+    </div>
+  </main>
+
+  <!-- ─── RIGHT PANEL ─── -->
+  <aside class="right-panel">
+
+    <!-- Panic Index -->
+    <div class="panel-section">
+      <div class="panel-title">🔥 Panic Index</div>
+      <div class="panic-display">
+        <div class="panic-value high" id="panicValue">72</div>
+        <div class="panic-label" id="panicLabel">中高风险 | ↑+10</div>
+        <div class="panic-bar-wrap">
+          <div class="panic-bar-fill" id="panicBar" style="width: 72%"></div>
+        </div>
+      </div>
+      <div class="path-indicator">
+        <div class="path-btn" id="pathA">A路径<br><small>35%</small></div>
+        <div class="path-btn active-path" id="pathB">B路径⭐<br><small>42%</small></div>
+        <div class="path-btn" id="pathC">C路径<br><small>23%</small></div>
+      </div>
+    </div>
+
+    <!-- 市场最新收盘价 -->
+    <div class="panel-section">
+      <div class="panel-title">📊 市场最新收盘价</div>
+      <div class="market-grid" id="marketGrid">
+        <!-- 由JS填充 -->
+      </div>
+      <div style="font-size:0.65rem; color:var(--text-muted); margin-top:8px; text-align:right;">
+        数据来源: Yahoo Finance · <span id="lastUpdate">--</span>
+      </div>
+    </div>
+
+    <!-- 触发监控 -->
+    <div class="panel-section">
+      <div class="panel-title">🚨 触发监控</div>
+      <div id="monitorList" style="font-size:0.82rem; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
+          <span style="color:var(--text-muted)">US10Y</span>
+          <span style="color:var(--text)">4.30%</span>
+          <span style="color:var(--green)">✅ 安全</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
+          <span style="color:var(--text-muted)">布伦特</span>
+          <span style="color:var(--text)">$97.97</span>
+          <span style="color:var(--yellow)">⚠️ 反弹</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
+          <span style="color:var(--text-muted)">VIX</span>
+          <span style="color:var(--text)">20.87</span>
+          <span style="color:var(--yellow)">🟡 临界</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(248,81,73,0.08); border-radius:6px; border:1px solid var(--red);">
+          <span style="color:var(--text-muted)">停火状态</span>
+          <span style="color:var(--red)">⚠️ 遭质疑</span>
+          <span style="color:var(--red)">🔴 监控</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 关键日历 -->
+    <div class="panel-section">
+      <div class="panel-title">📅 关键日历</div>
+      <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
+        <div style="padding:8px 10px; background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.3); border-radius:6px;">
+          <div style="color:var(--red); font-weight:600; font-size:0.72rem;">明日 4/10 08:30 ET</div>
+          <div style="color:var(--text); margin-top:2px;">🇺🇸 美国3月 CPI 数据</div>
+        </div>
+        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
+          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/10</div>
+          <div style="color:var(--text); margin-top:2px;">🕊️ 美伊伊斯兰堡谈判</div>
+        </div>
+        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
+          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/22</div>
+          <div style="color:var(--text); margin-top:2px;">停火协议到期</div>
+        </div>
+        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
+          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/28-29</div>
+          <div style="color:var(--text); margin-top:2px;">🏛️ FOMC 利率决议</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+// ─── 日报数据配置 ───
+const REPORTS = [
+  {
+    date: '20260413',
+    displayDate: '2026年4月13日',
+    weekday: '周一',
+    summary: '美伊谈判破裂 · 霍尔木兹海峡封锁令',
+    badge: 'badge-red',
+    panicIndex: 72,
+    panicDelta: '+24',
+    panicLevel: 'high',
+    panicLevelText: '高风险',
+    pathProbs: [30, 45, 25],
+    activeFile: 'daily_report_20260413.md'
+  },
+  {
+
+
+
+    date: '20260412',
+
+
+
+    displayDate: '2026年04月12日',
+
+
+
+    weekday: '周日',
+
+
+
+    summary: 'CPI路径C确认·停火谈判启动·PPI前夜',
+
+
+
+    badge: 'badge-yellow',
+
+
+
+    panicIndex: 52,
+
+
+
+    panicDelta: '↓3（停火谈判推进，VIX降至19.23）',
+
+
+
+    panicLevel: 'medium',
+
+
+
+    panicLevelText: '中等风险',
+
+
+
+    pathProbs: [25, 45, 30],
+
+
+
+    activeFile: 'daily_report_20260412.md'
+
+
+
+  },
+  {
+    date: '20260411',
+    displayDate: '2026年04月11日',
+    weekday: '周六',
+    summary: 'CPI路径C触发·核心通胀低预期·停火谈判高危',
+    badge: 'badge-yellow',
+    panicIndex: 55,
+    panicDelta: '+7',
+    panicLevel: 'medium',
+    panicLevelText: '中高风险',
+    pathProbs: [25, 50, 25],
+    activeFile: 'daily_report_20260411.md'
+  },
+  {
+    date: '20260410',
+    displayDate: '2026年04月10日',
+    weekday: '周五',
+    summary: 'CPI今晚发布·市场整固·等待数据定方向',
+    badge: 'badge-yellow',
+    panicIndex: 48,
+    panicDelta: '-7',
+    panicLevel: 'medium',
+    panicLevelText: '中高风险',
+    pathProbs: [35, 40, 25],
+    activeFile: 'daily_report_20260410.md'
+  },
+  {
+    date: '20260409',
+    displayDate: '2026年4月9日',
+    weekday: '周四',
+    summary: '停火余波消化·CPI前夜·市场整固观望',
+    badge: 'badge-yellow',
+    panicIndex: 55,
+    panicDelta: '-7',
+    panicLevel: 'medium',
+    panicLevelText: '中高风险',
+    pathProbs: [35, 40, 25],
+    activeFile: 'daily_report_20260409.md'
+  },
+  {
+    date: '20260408',
+    displayDate: '2026年4月8日',
+    weekday: '周三',
+    summary: '历史性停火生效 · 原油暴跌14%',
+    badge: 'badge-green',
+    panicIndex: 39,
+    panicDelta: '-49',
+    panicLevel: 'low',
+    panicLevelText: '低风险',
+    pathProbs: [45, 40, 15],
+    activeFile: 'daily_report_20260408.md'
+  },
+  {
+    date: '20260407',
+    displayDate: '2026年4月7日',
+    weekday: '周二',
+    summary: 'VIX飙升25.78 · 截止期限悬而未决',
+    badge: 'badge-red',
+    panicIndex: 88,
+    panicDelta: '+3',
+    panicLevel: 'high',
+    panicLevelText: '高风险',
+    pathProbs: [35, 40, 25],
+    activeFile: 'daily_report_20260407.md'
+  },
+  {
+    date: '20260406',
+    displayDate: '2026年4月6日',
+    weekday: '周一',
+    summary: '地缘博弈关键节点 · CPI情景前瞻',
+    badge: 'badge-red',
+    panicIndex: 85,
+    panicDelta: '→',
+    panicLevel: 'high',
+    panicLevelText: '高风险',
+    pathProbs: [40, 40, 20],
+    activeFile: 'daily_report_20260406.md'
+  }
+];
+
+let currentReport = REPORTS[0];
+let liveTickers = [];  // 实时行情数组，由 fetchMarketLive() 填充
+
+// ─── 收盘行情：从 market_live.json 加载（每日日报生成时更新）───
+async function fetchMarketLive() {
+  try {
+    const resp = await fetch('market_live.json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    liveTickers = data.assets || data.tickers || [];
+
+    renderTicker(liveTickers);
+    renderMarketGrid(liveTickers);
+
+    // 更新时间戳
+    const updatedTs = data.updated || data.timestamp || data.updated_at;
+    if (updatedTs) {
+      document.getElementById('lastUpdate').textContent = updatedTs + ' 更新';
+    }
+  } catch (e) {
+    console.warn('[market_live] 获取失败:', e.message);
+    if (liveTickers.length === 0) {
+      document.getElementById('tickerTrack').innerHTML =
+        '<span style="color:var(--yellow);font-size:0.78rem;">⚠️ 行情加载失败，请确认日报脚本已运行</span>';
+    }
+  }
+}
+
+// ─── 渲染滚动 ticker（N/A 值灰化处理）───
+function renderTicker(tickers) {
+  if (!tickers.length) return;
+  const html = tickers.map(m => {
+    const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
+    const change = m.change || m.chg || '--';
+    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
+    return `
+    <span class="ticker-item" style="${isNA ? 'opacity:0.35' : ''}">
+      <span class="ticker-name">${m.name}</span>
+      <span class="ticker-price">${isNA ? '--' : m.price}</span>
+      <span class="ticker-change ${dir}">${change}</span>
+    </span>
+    <span class="ticker-divider">|</span>
+  `}).join('');
+  document.getElementById('tickerTrack').innerHTML = html + html;
+}
+
+// ─── 渲染右侧市场网格（展示收盘价）───
+function renderMarketGrid(tickers) {
+  const grid = document.getElementById('marketGrid');
+  grid.innerHTML = tickers.map(m => {
+    const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
+    const change = m.change || m.chg || '--';
+    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
+    return `
+    <div class="market-card" style="${isNA ? 'opacity:0.35' : ''}">
+      <div class="mc-name">${m.name}</div>
+      <div class="mc-price">${isNA ? '--' : m.price}</div>
+      <div class="mc-change ${dir}">${change}</div>
+    </div>
+  `}).join('');
+}
+
+// ─── 初始化 ───
+function init() {
+  buildNavList();
+  startClock();
+  loadReport(REPORTS[0]);
+  // 加载每日收盘价（固定数据，由日报脚本每日更新）
+  fetchMarketLive();
+}
+
+// ─── 时钟 ───
+function startClock() {
+  function update() {
+    const now = new Date();
+    const options = { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', options);
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+// ─── 导航列表 ───
+function buildNavList() {
+  const container = document.getElementById('navList');
+  container.innerHTML = REPORTS.map((r, i) => `
+    <div class="nav-item ${i === 0 ? 'active' : ''}" onclick="loadReport(REPORTS[${i}], this)">
+      <div class="nav-date">${r.displayDate}（${r.weekday}）</div>
+      <div class="nav-summary">${r.summary}</div>
+      <span class="nav-badge ${r.badge}">Panic ${r.panicIndex}</span>
+    </div>
+  `).join('');
+}
+
+// ─── 加载日报 ───
+function loadReport(report, navEl) {
+  currentReport = report;
+
+  // 更新导航激活状态
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  else document.querySelectorAll('.nav-item')[0].classList.add('active');
+
+  // 更新右侧面板
+  updateRightPanel(report);
+
+  // 加载MD内容
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><div>加载中...</div></div>`;
+
+  fetch(report.activeFile)
+    .then(r => {
+      if (!r.ok) throw new Error('文件加载失败');
+      return r.text();
+    })
+    .then(md => {
+      // 移除 [Nav_Summary] 前置字段，防止显示在报告正文
+      const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
+      const html = marked.parse(cleanMd);
+      content.innerHTML = `<div class="md-body">${html}</div>`;
+    })
+    .catch(err => {
+      // 如果文件加载失败，显示友好错误
+      content.innerHTML = `<div class="md-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+        <p>📡 日报加载失败</p>
+        <p style="font-size:14px">请检查网络连接后刷新重试</p>
+      </div>`;
+    });
+}
+
+// ─── 更新右侧面板 ───
+function updateRightPanel(report) {
+  // Panic Index
+  const pv = document.getElementById('panicValue');
+  pv.textContent = report.panicIndex;
+  pv.className = `panic-value ${report.panicLevel}`;
+  document.getElementById('panicLabel').textContent = `${report.panicLevelText} | ${report.panicDelta === '+10' ? '↑' : report.panicDelta.includes('-') ? '↓' : '→'}${report.panicDelta}`;
+  document.getElementById('panicBar').style.width = report.panicIndex + '%';
+
+  // 路径概率
+  const [pa, pb, pc] = report.pathProbs;
+  document.getElementById('pathA').innerHTML = `A路径<br><small>${pa}%</small>`;
+  document.getElementById('pathB').innerHTML = `B路径⭐<br><small>${pb}%</small>`;
+  document.getElementById('pathC').innerHTML = `C路径<br><small>${pc}%</small>`;
+}
+
+// ─── 日报从 MD 文件动态加载，不再使用硬编码内容 ───
+
+// ─── 启动 ───
+window.addEventListener('load', init);
+</script>
 </body>
 </html>
