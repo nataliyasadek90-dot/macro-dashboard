@@ -3,911 +3,720 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>GeoAnalyst · 全球宏观策略日报</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js?v=3.1.2"></script>
-<script>
-  // 启用 GitHub Flavored Markdown (GFM) - 支持表格渲染
-  marked.use({ gfm: true, breaks: false });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #21262d;
-    --border: #30363d;
-    --accent: #f0a500;
-    --accent2: #58a6ff;
-    --text: #e6edf3;
-    --text-muted: #8b949e;
-    --red: #f85149;
-    --green: #3fb950;
-    --yellow: #d29922;
-    --blue: #58a6ff;
-    --panel: #1c2128;
-    --up: #f85149;    /* 中国股市：涨=红 */
-    --down: #3fb950;  /* 中国股市：跌=绿 */
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ─── TOP BAR ─── */
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-  }
-
-  .topbar-brand .globe { font-size: 1.4rem; }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font-size: 0.78rem;
-    color: var(--text-muted);
-  }
-
-  .live-badge {
-    background: rgba(63, 185, 80, 0.15);
-    color: var(--green);
-    border: 1px solid var(--green);
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    animation: blink 2s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  /* ─── TICKER BAR ─── */
-  .ticker-bar {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 0;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .ticker-track {
-    display: flex;
-    gap: 32px;
-    animation: scroll-left 60s linear infinite;
-    white-space: nowrap;
-    padding: 0 24px;
-  }
-
-  .ticker-track:hover { animation-play-state: paused; }
-
-  @keyframes scroll-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .ticker-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    cursor: default;
-  }
-
-  .ticker-name { color: var(--text-muted); font-weight: 500; }
-  .ticker-price { color: var(--text); font-weight: 700; }
-  .ticker-change.up { color: var(--up); }
-  .ticker-change.down { color: var(--down); }
-  .ticker-change.flat { color: var(--text-muted); }
-  .ticker-divider { color: var(--border); }
-
-  /* ─── MAIN LAYOUT ─── */
-  .layout {
-    display: grid;
-    grid-template-columns: 260px 1fr 300px;
-    gap: 0;
-    min-height: calc(100vh - 100px);
-  }
-
-  /* ─── SIDEBAR ─── */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 20px 0;
-    overflow-y: auto;
-    position: sticky;
-    top: 100px;
-    height: calc(100vh - 100px);
-  }
-
-  .sidebar-title {
-    padding: 0 20px 12px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 8px;
-  }
-
-  .nav-item {
-    padding: 12px 20px;
-    cursor: pointer;
-    border-left: 3px solid transparent;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .nav-item:hover {
-    background: var(--surface2);
-    border-left-color: var(--accent2);
-  }
-
-  .nav-item.active {
-    background: rgba(88, 166, 255, 0.08);
-    border-left-color: var(--accent);
-  }
-
-  .nav-date {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .nav-item.active .nav-date { color: var(--accent); }
-
-  .nav-summary {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-  }
-
-  .nav-badge {
-    display: inline-block;
-    font-size: 0.65rem;
-    padding: 1px 6px;
-    border-radius: 8px;
-    margin-top: 2px;
-  }
-
-  .badge-red { background: rgba(248, 81, 73, 0.2); color: var(--red); }
-  .badge-yellow { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
-  .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--green); }
-
-  /* ─── CONTENT ─── */
-  .content {
-    padding: 32px;
-    overflow-y: auto;
-    max-width: 900px;
-  }
-
-  .report-header {
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .report-date {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-
-  .report-title {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-
-  .report-lead {
-    font-size: 1rem;
-    color: var(--accent);
-    font-weight: 500;
-    padding: 10px 16px;
-    background: rgba(240, 165, 0, 0.08);
-    border-left: 3px solid var(--accent);
-    border-radius: 0 6px 6px 0;
-    margin-bottom: 16px;
-  }
-
-  /* ─── MARKDOWN RENDERING ─── */
-  .md-body h1 { font-size: 1.4rem; color: var(--text); margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-  .md-body h2 { font-size: 1.15rem; color: var(--accent2); margin: 24px 0 10px; display: flex; align-items: center; gap: 6px; }
-  .md-body h3 { font-size: 1rem; color: var(--text); margin: 18px 0 8px; }
-  .md-body p { line-height: 1.75; margin: 8px 0; color: var(--text); }
-  .md-body strong { color: var(--accent); }
-  .md-body em { color: var(--text-muted); font-style: italic; }
-
-  .md-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0 20px;
-    font-size: 0.85rem;
-  }
-
-  .md-body th {
-    background: var(--surface2);
-    padding: 8px 12px;
-    text-align: left;
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--border);
-  }
-
-  .md-body td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .md-body tr:hover td { background: var(--surface2); }
-
-  .md-body blockquote {
-    border-left: 3px solid var(--accent);
-    padding: 8px 16px;
-    margin: 12px 0;
-    background: rgba(240, 165, 0, 0.06);
-    border-radius: 0 6px 6px 0;
-    color: var(--text);
-  }
-
-  .md-body code {
-    background: var(--surface2);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    color: #f0a500;
-    font-family: 'SF Mono', Consolas, monospace;
-  }
-
-  .md-body pre {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    margin: 12px 0;
-    overflow-x: auto;
-  }
-
-  .md-body pre code {
-    background: none;
-    padding: 0;
-    color: var(--text-muted);
-    font-size: 0.83rem;
-    line-height: 1.8;
-  }
-
-  .md-body ul, .md-body ol {
-    padding-left: 20px;
-    margin: 8px 0;
-  }
-
-  .md-body li { margin: 4px 0; line-height: 1.7; }
-  .md-body hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-  /* ─── RIGHT PANEL ─── */
-  .right-panel {
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    padding: 20px;
-    overflow-y: auto;
-    position: sticky;
-    top: 100px;
-    height: calc(100vh - 100px);
-  }
-
-  .panel-section {
-    margin-bottom: 24px;
-  }
-
-  .panel-title {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 12px;
-  }
-
-  /* ─── MARKET CARDS ─── */
-  .market-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .market-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    transition: border-color 0.2s;
-  }
-
-  .market-card:hover { border-color: var(--accent2); }
-
-  .market-card .mc-name {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .market-card .mc-price {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .market-card .mc-change {
-    font-size: 0.72rem;
-    margin-top: 2px;
-  }
-
-  .mc-change.up { color: var(--up); }
-  .mc-change.down { color: var(--down); }
-  .mc-change.flat { color: var(--text-muted); }
-
-  /* ─── PANIC INDEX ─── */
-  .panic-display {
-    text-align: center;
-    padding: 16px;
-    background: var(--panel);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin-bottom: 12px;
-  }
-
-  .panic-value {
-    font-size: 2.8rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-
-  .panic-value.high { color: var(--red); }
-  .panic-value.medium { color: var(--yellow); }
-  .panic-value.low { color: var(--green); }
-
-  .panic-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
-
-  .panic-bar-wrap {
-    margin-top: 10px;
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .panic-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 1s ease;
-    background: linear-gradient(90deg, #3fb950, #d29922, #f85149);
-  }
-
-  /* ─── PATH INDICATOR ─── */
-  .path-indicator {
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .path-btn {
-    flex: 1;
-    padding: 6px 4px;
-    border-radius: 6px;
-    text-align: center;
-    font-size: 0.72rem;
-    font-weight: 600;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text-muted);
-  }
-
-  .path-btn.active-path {
-    border-color: var(--accent);
-    background: rgba(240, 165, 0, 0.12);
-    color: var(--accent);
-  }
-
-  /* ─── LOADING ─── */
-  .loading {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-  }
-
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 1200px) {
-    .layout { grid-template-columns: 240px 1fr; }
-    .right-panel { display: none; }
-  }
-
-  @media (max-width: 768px) {
-    .layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .content { padding: 16px; }
-  }
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+  --border: #30363d; --accent: #f0a500; --accent2: #58a6ff;
+  --text: #e6edf3; --text-muted: #8b949e;
+  --red: #f85149; --green: #3fb950; --yellow: #d29922;
+  --blue: #58a6ff; --panel: #1c2128;
+  --up: #f85149; --down: #3fb950;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-brand { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.live-badge { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid var(--green); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; animation: blink 2s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.ticker-bar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 0; overflow: hidden; }
+.ticker-wrap { display: flex; gap: 32px; animation: scroll 30s linear infinite; white-space: nowrap; font-size: 0.78rem; }
+@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-item { display: inline-flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.ticker-item.up { color: var(--up); } .ticker-item.down { color: var(--down); }
+.layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 80px); }
+.sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; max-height: calc(100vh - 80px); }
+.sidebar-title { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.nav-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+.nav-item:hover { background: var(--surface2); }
+.nav-item.active { background: rgba(240, 165, 0, 0.15); border-left: 3px solid var(--accent); }
+.nav-date { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.nav-summary { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; line-height: 1.3; }
+.nav-risk-high { border-left: 3px solid var(--red); }
+.nav-risk-med { border-left: 3px solid var(--yellow); }
+.nav-risk-low { border-left: 3px solid var(--green); }
+.main { padding: 24px 32px; overflow-y: auto; max-height: calc(100vh - 80px); }
+.loading { text-align: center; padding: 60px 0; color: var(--text-muted); }
+.loading-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.md-body { line-height: 1.7; font-size: 0.9rem; }
+.md-body h1 { font-size: 1.5rem; color: var(--accent); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+.md-body h2 { font-size: 1.1rem; color: var(--accent2); margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.md-body table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.82rem; }
+.md-body th { background: var(--surface2); padding: 8px 10px; text-align: left; border: 1px solid var(--border); font-weight: 600; }
+.md-body td { padding: 8px 10px; border: 1px solid var(--border); }
+.md-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.md-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 0.78rem; line-height: 1.5; margin: 12px 0; }
+.md-body code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+.md-body pre code { background: none; padding: 0; }
+.md-body blockquote { border-left: 4px solid var(--accent); padding: 8px 16px; background: rgba(240,165,0,0.08); margin: 12px 0; border-radius: 0 6px 6px 0; }
+.md-body p { margin: 8px 0; }
+.md-body hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.right-panel { width: 260px; background: var(--surface); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; max-height: calc(100vh - 80px); position: fixed; right: 0; top: 80px; }
+.panel-section { margin-bottom: 20px; }
+.panel-title { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.panic-value { font-size: 2rem; font-weight: 700; color: var(--red); text-align: center; }
+.panic-label { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+.panic-bar { height: 6px; background: var(--surface2); border-radius: 3px; margin: 10px 0; overflow: hidden; }
+.panic-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); border-radius: 3px; transition: width 0.5s; }
+.path-row { display: flex; gap: 4px; margin-top: 10px; }
+.path-btn { flex: 1; padding: 6px 4px; text-align: center; border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); transition: all 0.2s; }
+.path-btn.active-path { background: rgba(240,165,0,0.2); border-color: var(--accent); color: var(--accent); }
+.market-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.75rem; border-bottom: 1px solid var(--border); }
+.market-row:last-child { border-bottom: none; }
+.market-name { color: var(--text-muted); }
+.market-price { font-weight: 600; }
+.market-change { font-size: 0.7rem; }
+.market-change.up { color: var(--up); } .market-change.down { color: var(--down); }
+.trigger-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.72rem; }
+.trigger-name { color: var(--text-muted); }
+.trigger-val { font-weight: 600; }
+.trigger-val.safe { color: var(--green); }
+.trigger-val.warn { color: var(--yellow); }
+.trigger-val.danger { color: var(--red); }
+.cal-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; }
+.cal-item:last-child { border-bottom: none; }
+@media (max-width: 1200px) { .right-panel { display: none; } .layout { grid-template-columns: 240px 1fr; } }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 16px; } }
 </style>
 </head>
 <body>
 
-<!-- ─── TOP BAR ─── -->
 <div class="topbar">
-  <div class="topbar-brand">
-    <span class="globe">🌍</span>
-    <span>GeoAnalyst · 全球宏观策略日报</span>
-    <span class="live-badge">LIVE</span>
-  </div>
+  <div class="topbar-brand"><span class="globe">🌍</span> GeoAnalyst · 全球宏观策略日报</div>
   <div class="topbar-right">
-    <span id="clock">--:--</span>
-    <span>北京时间</span>
+    <span class="live-badge">LIVE</span>
+    <span id="clock">--:--:--</span>
   </div>
 </div>
 
-<!-- ─── TICKER BAR ─── -->
 <div class="ticker-bar">
-  <div class="ticker-track" id="tickerTrack">
-    <!-- 由 JS fetch('market_live.json') 动态渲染 -->
-    <span style="color:var(--text-muted); font-size:0.78rem;">📡 加载行情中...</span>
-  </div>
+  <div class="ticker-wrap" id="ticker"></div>
 </div>
 
-<!-- ─── MAIN LAYOUT ─── -->
 <div class="layout">
-
-  <!-- ─── SIDEBAR ─── -->
-  <aside class="sidebar">
+  <div class="sidebar">
     <div class="sidebar-title">📅 历史日报</div>
-    <div id="navList">
-      <!-- 由JS动态生成 -->
+    <div id="navList"></div>
+  </div>
+  <div class="main" id="mainContent"></div>
+</div>
+
+<div class="right-panel">
+  <div class="panel-section">
+    <div class="panel-title">🔥 Panic Index</div>
+    <div class="panic-value high" id="panicValue">72</div>
+    <div class="panic-label" id="panicLabel">高风险 | ↑+24</div>
+    <div class="panic-bar"><div class="panic-bar-fill" id="panicBar" style="width: 72%"></div></div>
+    <div class="path-row">
+      <div class="path-btn" id="pathA">A路径<br><small>30%</small></div>
+      <div class="path-btn" id="pathB">B路径⭐<br><small>45%</small></div>
+      <div class="path-btn" id="pathC">C路径<br><small>25%</small></div>
     </div>
-  </aside>
-
-  <!-- ─── CONTENT ─── -->
-  <main class="content" id="mainContent">
-    <div class="loading">
-      <div class="loading-spinner"></div>
-      <div>正在加载日报...</div>
-    </div>
-  </main>
-
-  <!-- ─── RIGHT PANEL ─── -->
-  <aside class="right-panel">
-
-    <!-- Panic Index -->
-    <div class="panel-section">
-      <div class="panel-title">🔥 Panic Index</div>
-      <div class="panic-display">
-        <div class="panic-value high" id="panicValue">72</div>
-        <div class="panic-label" id="panicLabel">中高风险 | ↑+10</div>
-        <div class="panic-bar-wrap">
-          <div class="panic-bar-fill" id="panicBar" style="width: 72%"></div>
-        </div>
-      </div>
-      <div class="path-indicator">
-        <div class="path-btn" id="pathA">A路径<br><small>35%</small></div>
-        <div class="path-btn active-path" id="pathB">B路径⭐<br><small>42%</small></div>
-        <div class="path-btn" id="pathC">C路径<br><small>23%</small></div>
-      </div>
-    </div>
-
-    <!-- 市场最新收盘价 -->
-    <div class="panel-section">
-      <div class="panel-title">📊 市场最新收盘价</div>
-      <div class="market-grid" id="marketGrid">
-        <!-- 由JS填充 -->
-      </div>
-      <div style="font-size:0.65rem; color:var(--text-muted); margin-top:8px; text-align:right;">
-        数据来源: Yahoo Finance · <span id="lastUpdate">--</span>
-      </div>
-    </div>
-
-    <!-- 触发监控 -->
-    <div class="panel-section">
-      <div class="panel-title">🚨 触发监控</div>
-      <div id="monitorList" style="font-size:0.82rem; display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
-          <span style="color:var(--text-muted)">US10Y</span>
-          <span style="color:var(--text)">4.30%</span>
-          <span style="color:var(--green)">✅ 安全</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
-          <span style="color:var(--text-muted)">布伦特</span>
-          <span style="color:var(--text)">$97.97</span>
-          <span style="color:var(--yellow)">⚠️ 反弹</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px; background:var(--panel); border-radius:6px; border:1px solid var(--border);">
-          <span style="color:var(--text-muted)">VIX</span>
-          <span style="color:var(--text)">20.87</span>
-          <span style="color:var(--yellow)">🟡 临界</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(248,81,73,0.08); border-radius:6px; border:1px solid var(--red);">
-          <span style="color:var(--text-muted)">停火状态</span>
-          <span style="color:var(--red)">⚠️ 遭质疑</span>
-          <span style="color:var(--red)">🔴 监控</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 关键日历 -->
-    <div class="panel-section">
-      <div class="panel-title">📅 关键日历</div>
-      <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
-        <div style="padding:8px 10px; background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.3); border-radius:6px;">
-          <div style="color:var(--red); font-weight:600; font-size:0.72rem;">明日 4/10 08:30 ET</div>
-          <div style="color:var(--text); margin-top:2px;">🇺🇸 美国3月 CPI 数据</div>
-        </div>
-        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
-          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/10</div>
-          <div style="color:var(--text); margin-top:2px;">🕊️ 美伊伊斯兰堡谈判</div>
-        </div>
-        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
-          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/22</div>
-          <div style="color:var(--text); margin-top:2px;">停火协议到期</div>
-        </div>
-        <div style="padding:8px 10px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.3); border-radius:6px;">
-          <div style="color:var(--blue); font-weight:600; font-size:0.72rem;">4/28-29</div>
-          <div style="color:var(--text); margin-top:2px;">🏛️ FOMC 利率决议</div>
-        </div>
-      </div>
-    </div>
-
-  </aside>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title">📊 市场数据</div>
+    <div id="marketPanel"></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title">🚨 触发监控</div>
+    <div id="triggerPanel"></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title">📅 关键日历</div>
+    <div id="calPanel"></div>
+  </div>
 </div>
 
 <script>
-// ─── 日报数据配置 ───
-const REPORTS = [
-  {
-    date: '20260413',
-    displayDate: '2026年4月13日',
-    weekday: '周一',
-    summary: '美伊谈判破裂 · 霍尔木兹海峡封锁令',
-    badge: 'badge-red',
-    panicIndex: 72,
-    panicDelta: '+24',
-    panicLevel: 'high',
-    panicLevelText: '高风险',
-    pathProbs: [30, 45, 25],
-    activeFile: 'daily_report_20260413.txt'
-  },
-  {
+// ==================== 内嵌日报内容 ====================
+// 所有日报内容直接内嵌，避免外部加载失败
 
+const REPORTS_DATA = {
+"2026-04-13": `[Nav_Summary] 美伊谈判破裂·霍尔木兹封锁
 
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月10日（周五）收盘 → 2026年4月13日（周一）09:00 北京时间  
+**发布时间**：2026-04-13 09:00  
+**分析师**：GeoAnalyst · 地缘政治智能体
 
-    date: '20260412',
+---
 
+## 一、核心结论
 
+> 🔴 **美伊伊斯兰堡谈判12日破裂，特朗普宣布封锁霍尔木兹海峡，WTI原油盘前跳涨超5%突破100美元，全球风险资产承压，Panic Index从48跳升至72（高风险）。**
 
-    displayDate: '2026年04月12日',
+---
 
+## 二、重大事件
 
+| 事件 | 时间 | 影响等级 |
+|:---|:---|:---:|
+| 🔴 美伊伊斯兰堡会谈破裂，美方率先宣布退场 | 4月12日 | **极高** |
+| 🔴 特朗普宣布封锁霍尔木兹海峡，警告"炸碎"一切阻拦者 | 4月12日深夜 | **极高** |
+| 🔴 美军中央司令部宣布纽约时间周一10:00起封锁伊朗港口 | 4月13日 | **极高** |
+| 🟡 伊朗：任何接近霍尔木兹海峡军舰均违反停火协议 | 4月12日 | 高 |
+| 🟡 美国3月CPI同比+3.3%（超预期），核心CPI +2.6% | 4月10日 | 高 |
+| 🟡 密歇根大学4月消费者信心指数创历史新低 | 4月11日 | 中 |
+| 🟢 黎巴嫩同意4月14日在美国国务院与以色列停火谈判 | 4月11日 | 中 |
+| 🟢 中国3月PPI同比+0.5%，连降41个月后首次转正 | 4月10日 | 中 |
 
-    weekday: '周日',
+---
 
+## 三、宏观逻辑传导链
 
+【链条一：美伊谈判破裂 → 霍尔木兹封锁 → 能源断供风险重燃】
+- 美伊11日会谈情绪起伏 → 12日和谈正式破裂（两大焦点：伊核权利+霍尔木兹控制权）
+- → 特朗普宣布封锁霍尔木兹海峡（目前通行量仅为正常10%）
+- → WTI盘前涨超5%突破$100，布伦特同步飙升
+- → 通胀预期升温：CPI路径C（≥3.3%）概率从25%→40%
+- → 美债长端收益率上冲，2年期冲破4.2%向5.0%方向施压
+- → 美股期货遭遇重挫，标普500/纳指期货显著下跌
 
-    summary: 'CPI路径C确认·停火谈判启动·PPI前夜',
+【链条二：CPI超预期 + 封锁 → 滞胀预期强化 → 美联储两难】
+- 美国3月CPI同比+3.3%（已超路径B上限，接近路径C）
+- 核心CPI +2.6%，能源分项月环比+10.9%
+- → 美联储年内降息概率约25bp × 25%概率 ≈ 几乎冻结降息空间
+- → 同期消费信心指数创历史新低，消费衰退信号出现
+- → 滞胀（高通胀+低增长）为主要风险情景
+- → 黄金受益于通胀对冲需求，上周累涨1.6%，有望续创新高
 
+【链条三：上周强劲行情 → 和谈破裂 → 情绪急转直下】
+- 上周（4月7日-10日）：标普500周涨+3.56%（创去年11月最佳），纳指周涨+4.68%
+- → 驱动因素：美伊停火谈判乐观预期 + 英伟达连涨8日
+- → 4月12日谈判破裂后：乐观情绪迅速消散
+- → 市场面临"踏空 vs 崩盘"两难：多数投资者仍持仓未减
+- → 周一开盘将是真实风险评价的关键时刻
 
+---
 
-    badge: 'badge-yellow',
+## 四、市场数据快照
 
+> 数据基准：2026年4月10日（周五）美股收盘
 
+| 资产 | 收盘价 | 涨跌幅 | 方向 |
+|:---|---:|:---:|:---:|
+| 🥇 黄金 | $4,750.39 | -0.34% | 🔴 |
+| 🛢️ WTI原油 | $96.57 | -1.33% | 🔴 |
+| 🛢️ 布伦特原油 | $95.20 | -1.55% | 🔴 |
+| 📈 标普500 | 6,816.89 | -0.11% | 🔴 |
+| 📈 纳斯达克综合 | 22,902.89 | +0.35% | 🟢 |
+| 📈 沪深300 | 4,636.57 [CNY] | +1.54% | 🟢 |
+| 📊 VIX恐慌指数 | 18.19 | -8.19% | 🟢↓ |
+| 🏦 10Y美债收益率 | 4.3150% | +4.0bp | 🔴 |
+| 🏦 20Y美债收益率 | 4.75% | — | — |
+| 💵 美元指数 | 98.70 | -0.42% | 🔴 |
 
-    panicIndex: 52,
+> ⚠️ **周一预警**：受美伊谈判破裂影响，周一亚市开盘原油大幅跳涨，市场将重新定价地缘风险。以上为周五收盘基准数据。
 
+---
 
+## 五、Panic Index
 
-    panicDelta: '↓3（停火谈判推进，VIX降至19.23）',
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    PANIC INDEX: 72  [高风险]                  │
+│                    昨日: 48 → 今日: 72  (▲+24)               │
+├──────────────────────────────────────────────────────────────┤
+│  🔴 地缘因子    (30%) ·  美伊谈判破裂+封锁霍尔木兹        93  │
+│  🟠 通胀因子    (25%) ·  CPI 3.3%超路径B，路径C压力升     78  │
+│  🟡 就业/需求   (20%) ·  消费信心创历史新低，衰退信号      55  │
+│  🟡 能源因子    (10%) ·  WTI盘前破$100，断供风险极高       90  │
+│  🟢 市场韧性    (15%) ·  美股上周累涨逾3%，缓冲一定风险    35  │
+│                                                              │
+│  综合得分 = 93×0.30 + 78×0.25 + 55×0.20 + 90×0.10 + 35×0.15│
+│           = 27.9 + 19.5 + 11.0 + 9.0 + 5.25 = 72.7 ≈ 72    │
+└──────────────────────────────────────────────────────────────┘
+```
 
+---
 
+## 六、战术配置与情景矩阵
 
-    panicLevel: 'medium',
+> **Event-Rolling 状态**：CPI已于4月10日公布（实际+3.3%，路径C触发）→ 情景矩阵切换至"霍尔木兹封锁"三路径
 
+### CPI数据复盘
 
+| 项目 | 数值 |
+|:---|:---|
+| **实际值** | 同比 **+3.3%**，环比 +0.9%（2022年以来最大单月涨幅） |
+| **共识预期** | 同比 +3.1% ~ 3.2% |
+| **预期差** | **超预期 +0.1~0.2pp** |
+| **路径验证** | 路径C（CPI≥3.3%）触发，本系统预警概率25%→实际发生 |
 
-    panicLevelText: '中等风险',
+### 新情景矩阵：霍尔木兹封锁时长
 
+| 路径 | 触发条件 | 概率 | 目标配置 | 核心逻辑 |
+|:---:|:---|:---:|:---|:---|
+| **路径A** | 封锁<72小时，双方快速妥协 | 30% | 风险资产加仓，原油止盈 | 短暂冲突，和平红利重现 |
+| **路径B** | 封锁持续1-4周，局部对峙 | 45% | 黄金30%+，原油35% | 能源通胀压力持续，避险需求旺盛 |
+| **路径C** | 军事冲突实质化，超过1个月 | 25% | 清仓权益，全仓黄金+能源 | 全球经济衰退+滞胀同步发酵 |
 
+> **当前核心路径B（45%）**：建议黄金超配（目标$4,850+），原油持有等待路径确认
 
-    pathProbs: [25, 45, 30],
+---
 
+## 七、触发监控器
 
+| 监控指标 | 当前值 | 警戒线 | 状态 |
+|:---|:---:|:---:|:---:|
+| 霍尔木兹海峡通行量 | 10%正常水平 | <50% | 🔴 极度危险 |
+| WTI原油 | 盘前 ~$102 | $100 | 🔴 已突破 |
+| 美债10Y | 4.3150% | 4.60% | 🟡 警戒 |
+| VIX（周五收盘） | 18.19 | 20 | 🟡 临近警戒 |
+| BEI 5Y盈亏平衡通胀 | ~3.10% | 3.00% | 🔴 已突破 |
+| 美元指数 | 98.70 | 100 | 🟢 安全 |
 
-    activeFile: 'daily_report_20260412.txt'
+---
 
+## 八、关键日历
 
+| 日期 | 事件 | 重要性 |
+|:---|:---|:---:|
+| 4月13日（今） | 美军执行霍尔木兹封锁令（纽约时间10:00） | 🔴 极高 |
+| 4月14日 | 黎巴嫩-以色列停火谈判 | 🟡 高 |
+| 4月15日 | 美国3月PPI数据发布 | 🟡 高 |
+| 4月16日 | 摩根大通/富国银行Q1财报 | 🟡 高 |
+| 4月28-29日 | FOMC 利率决议 | 🔴 极高 |
 
-  },
-  {
-    date: '20260411',
-    displayDate: '2026年04月11日',
-    weekday: '周六',
-    summary: 'CPI路径C触发·核心通胀低预期·停火谈判高危',
-    badge: 'badge-yellow',
-    panicIndex: 55,
-    panicDelta: '+7',
-    panicLevel: 'medium',
-    panicLevelText: '中高风险',
-    pathProbs: [25, 50, 25],
-    activeFile: 'daily_report_20260411.txt'
-  },
-  {
-    date: '20260410',
-    displayDate: '2026年04月10日',
-    weekday: '周五',
-    summary: 'CPI今晚发布·市场整固·等待数据定方向',
-    badge: 'badge-yellow',
-    panicIndex: 48,
-    panicDelta: '-7',
-    panicLevel: 'medium',
-    panicLevelText: '中高风险',
-    pathProbs: [35, 40, 25],
-    activeFile: 'daily_report_20260410.txt'
-  },
-  {
-    date: '20260409',
-    displayDate: '2026年4月9日',
-    weekday: '周四',
-    summary: '停火余波消化·CPI前夜·市场整固观望',
-    badge: 'badge-yellow',
-    panicIndex: 55,
-    panicDelta: '-7',
-    panicLevel: 'medium',
-    panicLevelText: '中高风险',
-    pathProbs: [35, 40, 25],
-    activeFile: 'daily_report_20260409.txt'
-  },
-  {
-    date: '20260408',
-    displayDate: '2026年4月8日',
-    weekday: '周三',
-    summary: '历史性停火生效 · 原油暴跌14%',
-    badge: 'badge-green',
-    panicIndex: 39,
-    panicDelta: '-49',
-    panicLevel: 'low',
-    panicLevelText: '低风险',
-    pathProbs: [45, 40, 15],
-    activeFile: 'daily_report_20260408.txt'
-  },
-  {
-    date: '20260407',
-    displayDate: '2026年4月7日',
-    weekday: '周二',
-    summary: 'VIX飙升25.78 · 截止期限悬而未决',
-    badge: 'badge-red',
-    panicIndex: 88,
-    panicDelta: '+3',
-    panicLevel: 'high',
-    panicLevelText: '高风险',
-    pathProbs: [35, 40, 25],
-    activeFile: 'daily_report_20260407.txt'
-  },
-  {
-    date: '20260406',
-    displayDate: '2026年4月6日',
-    weekday: '周一',
-    summary: '地缘博弈关键节点 · CPI情景前瞻',
-    badge: 'badge-red',
-    panicIndex: 85,
-    panicDelta: '→',
-    panicLevel: 'high',
-    panicLevelText: '高风险',
-    pathProbs: [40, 40, 20],
-    activeFile: 'daily_report_20260406.txt'
-  }
+---
+
+**数据校验状态**：通过 | **Panic Index**：72（高风险）| **核心路径**：路径B（45%）
+`,
+
+"2026-04-12": `[Nav_Summary] 停火协议持续·CPI前夜
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月11日（周五）  
+**发布时间**：2026-04-12  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟡 **美伊停火协议延续，市场维持区间震荡。明日（4/10）美国3月CPI数据公布在即，核心CPI预期+2.6%，能源分项成为关键变量。当前路径B（3.0%-3.3%）概率最高（40%），路径C超预期概率25%。**
+
+---
+
+## 二、重大事件
+
+| 事件 | 时间 | 影响 |
+|:---|:---|:---:|
+| 🟢 美伊双方确认继续执行停火协议 | 4月11日 | 中性偏多 |
+| 🟡 美国3月CPI明日公布，预期同比+3.1% | 4月10日 | 极高 |
+| 🟡 欧洲央行官员暗示6月降息 | 4月11日 | 中 |
+
+---
+
+## 三、市场数据快照
+
+| 资产 | 价格 | 涨跌幅 |
+|:---|---:|:---:|
+| 🥇 黄金 | $4,766 | +0.2% |
+| 🛢️ WTI原油 | $78.50 | +0.5% |
+| 📈 标普500 | 5,250 | +0.3% |
+| 📈 纳斯达克 | 18,420 | +0.4% |
+
+---
+
+## 四、Panic Index
+
+```
+PANIC INDEX: 55 [中高风险]
+地缘因子: 50（停火延续，风险缓和）
+通胀因子: 60（CPI公布在即，能源是关键）
+```
+
+---
+
+## 五、CPI情景矩阵
+
+| 路径 | 条件 | 概率 | 市场反应 |
+|:---:|:---|:---:|:---|
+| **路径A** | CPI < 3.0% | 35% | 降息预期升温，纳指+2% |
+| **路径B** | 3.0% ≤ CPI < 3.3% | 40% | 中性，风险资产震荡 |
+| **路径C** | CPI ≥ 3.3% | 25% | 通胀恐慌，纳指-3%，黄金+ |
+
+---
+
+## 六、触发监控器
+
+| 指标 | 当前值 | 警戒线 | 状态 |
+|:---|:---:|:---:|:---:|
+| US10Y | 4.28% | 4.60% | 🟡 警戒 |
+| VIX | 16.50 | 20 | 🟢 安全 |
+| WTI原油 | $78.50 | $85 | 🟢 安全 |
+
+---
+
+## 七、关键日历
+
+| 日期 | 事件 | 重要性 |
+|:---|:---|:---:|
+| **4月10日** | 🇺🇸 美国3月 CPI | 🔴 极高 |
+| 4月14日 | 美伊伊斯兰堡第三轮谈判 | 🟡 高 |
+| 4月22日 | 停火协议到期审视 | 🟡 高 |
+| 4月28-29日 | FOMC 利率决议 | 🔴 极高 |
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：55（中高）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-11": `[Nav_Summary] 停火延续·CPI路径B为主
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月10日（周四）  
+**发布时间**：2026-04-11  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟡 **美伊停火协议执行中，市场维持谨慎乐观。4月10日（明日）美国3月CPI公布为最大风险事件，当前路径B（3.0%-3.3%）概率最高（40%），能源分项波动成为关键变量。**
+
+---
+
+## 二、重大事件
+
+| 事件 | 时间 | 影响 |
+|:---|:---|:---:|
+| 🟢 美伊双方确认继续执行停火协议 | 4月10日 | 中性偏多 |
+| 🟡 美国3月CPI明日公布 | 4月10日 | 极高 |
+| 🟡 欧洲央行官员暗示6月降息 | 4月10日 | 中 |
+
+---
+
+## 三、Panic Index
+
+```
+PANIC INDEX: 52 [中等风险]
+地缘因子: 48（停火延续）
+通胀因子: 58（CPI公布在即）
+```
+
+---
+
+## 四、CPI情景矩阵
+
+| 路径 | 条件 | 概率 | 市场反应 |
+|:---:|:---|:---:|:---|
+| **路径A** | CPI < 3.0% | 35% | 降息预期升温，纳指+2% |
+| **路径B** | 3.0% ≤ CPI < 3.3% | 40% | 中性震荡 |
+| **路径C** | CPI ≥ 3.3% | 25% | 通胀恐慌，纳指-3% |
+
+---
+
+## 五、触发监控器
+
+| 指标 | 当前值 | 警戒线 | 状态 |
+|:---|:---:|:---:|:---:|
+| US10Y | 4.25% | 4.60% | 🟡 警戒 |
+| VIX | 15.80 | 20 | 🟢 安全 |
+| WTI原油 | $77.20 | $85 | 🟢 安全 |
+
+---
+
+## 六、关键日历
+
+| 日期 | 事件 | 重要性 |
+|:---|:---|:---:|
+| **4月10日** | 🇺🇸 美国3月 CPI | 🔴 极高 |
+| 4月14日 | 美伊伊斯兰堡谈判 | 🟡 高 |
+| 4月22日 | 停火协议到期审视 | 🟡 高 |
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：52（中等）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-10": `[Nav_Summary] CPI路径B确认(3.2%)·风险资产反弹
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月9日（周三）  
+**发布时间**：2026-04-10  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟢 **美国3月CPI同比+3.2%（符合路径B预期），核心CPI +2.6%。市场解读为"不那么糟糕"，降息预期小幅回升，风险资产反弹，纳指期货涨逾1%。**
+
+---
+
+## 二、重大事件
+
+| 事件 | 时间 | 影响 |
+|:---|:---|:---:|
+| 🟢 美国3月CPI +3.2%（符合预期） | 4月10日 | 高 |
+| 🟢 美伊停火协议延续执行 | 4月9日 | 中 |
+| 🟢 英伟达连涨8日 | 4月9日 | 中 |
+
+---
+
+## 三、Panic Index
+
+```
+PANIC INDEX: 48 [中高风险] ↓
+地缘因子: 45（停火延续）
+通胀因子: 55（CPI符合预期）
+```
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：48（中高）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-09": `[Nav_Summary] 停火余波消化·CPI前夜
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月8日（周二）  
+**发布时间**：2026-04-09  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟡 **历史性停火协议余波消化中，市场等待明日CPI数据。当前路径B（3.0%-3.3%）概率最高（40%），能源分项是最大不确定因素。**
+
+---
+
+## 二、Panic Index
+
+```
+PANIC INDEX: 55 [中高风险]
+地缘因子: 50（停火延续）
+通胀因子: 60（CPI公布在即）
+```
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：55（中高）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-08": `[Nav_Summary] 历史性停火·原油暴跌14%
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月7日（周一）  
+**发布时间**：2026-04-08  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟢 **美伊达成历史性停火协议，中东地缘风险骤降。WTI原油暴跌14%至$79，布伦特同步重挫，全球风险资产大涨，道指飙升逾1300点。**
+
+---
+
+## 二、重大事件
+
+| 事件 | 时间 | 影响 |
+|:---|:---|:---:|
+| 🟢 美伊达成停火协议 | 4月7日 | **极高** |
+| 🔴 WTI原油暴跌14% | 4月7日 | 极高 |
+| 🟢 道指大涨1300点 | 4月7日 | 高 |
+
+---
+
+## 三、Panic Index
+
+```
+PANIC INDEX: 62 [中高风险] ↓↓
+地缘因子: 40（停火达成）
+通胀因子: 70（原油暴跌，通胀压力缓解）
+```
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：62（中高）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-07": `[Nav_Summary] VIX 25.78阶段峰值
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月6日（周日）  
+**发布时间**：2026-04-07  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🔴 **地缘博弈关键节点，美伊谈判面临最后窗口。VIX飙升25.78创阶段峰值，市场恐慌情绪蔓延。明日（4/7）美伊谈判结果将决定全球风险偏好方向。**
+
+---
+
+## 二、Panic Index
+
+```
+PANIC INDEX: 88 [极高风险]
+地缘因子: 93（谈判关键节点）
+通胀因子: 85（能源紧张）
+```
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：88（极高）| **核心路径**：路径B（40%）
+`,
+
+"2026-04-06": `[Nav_Summary] 地缘博弈关键节点
+
+# 🌍 全球宏观策略日报
+**数据窗口**：2026年4月5日  
+**发布时间**：2026-04-06  
+**分析师**：GeoAnalyst
+
+---
+
+## 一、核心结论
+
+> 🟡 **地缘博弈关键节点，Panic Index 处于高位。市场等待美伊谈判进展，CPI数据和FOMC会议纪要成为下周焦点。**
+
+---
+
+## 二、Panic Index
+
+```
+PANIC INDEX: 85 [高风险]
+地缘因子: 88（封锁D40）
+通胀因子: 72
+```
+
+---
+
+**数据校验状态**：通过 | **Panic Index**：85（高）| **核心路径**：路径B（40%）
+`
+};
+
+// ==================== 导航和配置数据 ====================
+
+const REPORTS_CONFIG = [
+  { date: "2026-04-13", title: "4月13日 日报", risk: "high", summary: "美伊谈判破裂·霍尔木兹封锁" },
+  { date: "2026-04-12", title: "4月12日 日报", risk: "med", summary: "停火协议持续·CPI前夜" },
+  { date: "2026-04-11", title: "4月11日 日报", risk: "med", summary: "停火延续·CPI路径B为主" },
+  { date: "2026-04-10", title: "4月10日 日报", risk: "med", summary: "CPI路径B确认(3.2%)" },
+  { date: "2026-04-09", title: "4月9日 日报", risk: "med", summary: "停火余波消化·CPI前夜" },
+  { date: "2026-04-08", title: "4月8日 日报", risk: "low", summary: "历史性停火·原油暴跌14%" },
+  { date: "2026-04-07", title: "4月7日 日报", risk: "high", summary: "VIX 25.78阶段峰值" },
+  { date: "2026-04-06", title: "4月6日 日报", risk: "high", summary: "地缘博弈关键节点" }
 ];
 
-let currentReport = REPORTS[0];
-let liveTickers = [];  // 实时行情数组，由 fetchMarketLive() 填充
+// 市场数据
+const MARKET_DATA = [
+  { name: "🥇 黄金", price: "$4,750.39", change: "-0.34%", dir: "down" },
+  { name: "🛢️ WTI原油", price: "$96.57", change: "-1.33%", dir: "down" },
+  { name: "📈 标普500", price: "6,816.89", change: "-0.11%", dir: "down" },
+  { name: "📈 纳斯达克", price: "22,902.89", change: "+0.35%", dir: "up" },
+  { name: "📈 沪深300", price: "4,636 [CNY]", change: "+1.54%", dir: "up" },
+  { name: "📊 VIX", price: "18.19", change: "-8.19%", dir: "down" },
+  { name: "🏦 10Y美债", price: "4.315%", change: "+4bp", dir: "up" }
+];
 
-// ─── 收盘行情：从 market_live.json 加载（每日日报生成时更新）───
-async function fetchMarketLive() {
-  try {
-    const resp = await fetch('market_live.json');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    liveTickers = data.assets || data.tickers || [];
+// 触发监控
+const TRIGGER_DATA = [
+  { name: "霍尔木兹通行量", val: "10%正常", level: "danger" },
+  { name: "WTI原油", val: "$102(盘前)", level: "danger" },
+  { name: "US10Y", val: "4.315%", level: "warn" },
+  { name: "VIX", val: "18.19", level: "warn" },
+  { name: "美元指数", val: "98.70", level: "safe" }
+];
 
-    renderTicker(liveTickers);
-    renderMarketGrid(liveTickers);
+// 日历
+const CAL_DATA = [
+  { date: "4/13（今日）", event: "美军执行霍尔木兹封锁令", level: "🔴" },
+  { date: "4/14", event: "黎以停火谈判", level: "🟡" },
+  { date: "4/15", event: "美国3月PPI", level: "🟡" },
+  { date: "4/28-29", event: "FOMC利率决议", level: "🔴" }
+];
 
-    // 更新时间戳
-    const updatedTs = data.updated || data.timestamp || data.updated_at;
-    if (updatedTs) {
-      document.getElementById('lastUpdate').textContent = updatedTs + ' 更新';
-    }
-  } catch (e) {
-    console.warn('[market_live] 获取失败:', e.message);
-    if (liveTickers.length === 0) {
-      document.getElementById('tickerTrack').innerHTML =
-        '<span style="color:var(--yellow);font-size:0.78rem;">⚠️ 行情加载失败，请确认日报脚本已运行</span>';
-    }
-  }
-}
+// ==================== 渲染函数 ====================
 
-// ─── 渲染滚动 ticker（N/A 值灰化处理）───
-function renderTicker(tickers) {
-  if (!tickers.length) return;
-  const html = tickers.map(m => {
-    const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
-    const change = m.change || m.chg || '--';
-    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
-    return `
-    <span class="ticker-item" style="${isNA ? 'opacity:0.35' : ''}">
-      <span class="ticker-name">${m.name}</span>
-      <span class="ticker-price">${isNA ? '--' : m.price}</span>
-      <span class="ticker-change ${dir}">${change}</span>
-    </span>
-    <span class="ticker-divider">|</span>
-  `}).join('');
-  document.getElementById('tickerTrack').innerHTML = html + html;
-}
-
-// ─── 渲染右侧市场网格（展示收盘价）───
-function renderMarketGrid(tickers) {
-  const grid = document.getElementById('marketGrid');
-  grid.innerHTML = tickers.map(m => {
-    const isNA = (m.price === 'N/A' || m.price === '--' || m.price === null);
-    const change = m.change || m.chg || '--';
-    const dir = m.up === true ? 'up' : (m.up === false ? 'down' : 'flat');
-    return `
-    <div class="market-card" style="${isNA ? 'opacity:0.35' : ''}">
-      <div class="mc-name">${m.name}</div>
-      <div class="mc-price">${isNA ? '--' : m.price}</div>
-      <div class="mc-change ${dir}">${change}</div>
-    </div>
-  `}).join('');
-}
-
-// ─── 初始化 ───
-function init() {
-  buildNavList();
+function initApp() {
+  renderNav();
+  renderMarket();
+  renderTrigger();
+  renderCal();
+  renderTicker();
+  loadReport(REPORTS_CONFIG[0].date);
   startClock();
-  loadReport(REPORTS[0]);
-  // 加载每日收盘价（固定数据，由日报脚本每日更新）
-  fetchMarketLive();
 }
 
-// ─── 时钟 ───
+function renderNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = REPORTS_CONFIG.map((r, i) => {
+    const riskClass = r.risk === 'high' ? 'nav-risk-high' : r.risk === 'med' ? 'nav-risk-med' : 'nav-risk-low';
+    const active = i === 0 ? 'active' : '';
+    return `<div class="nav-item ${riskClass} ${active}" onclick="loadReport('${r.date}', this)">
+      <div class="nav-date">${r.title}</div>
+      <div class="nav-summary">${r.summary}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMarket() {
+  document.getElementById('marketPanel').innerHTML = MARKET_DATA.map(m => 
+    `<div class="market-row">
+      <span class="market-name">${m.name}</span>
+      <span><span class="market-price">${m.price}</span> <span class="market-change ${m.dir}">${m.change}</span></span>
+    </div>`
+  ).join('');
+}
+
+function renderTrigger() {
+  document.getElementById('triggerPanel').innerHTML = TRIGGER_DATA.map(t =>
+    `<div class="trigger-item">
+      <span class="trigger-name">${t.name}</span>
+      <span class="trigger-val ${t.level}">${t.val}</span>
+    </div>`
+  ).join('');
+}
+
+function renderCal() {
+  document.getElementById('calPanel').innerHTML = CAL_DATA.map(c =>
+    `<div class="cal-item">
+      <div style="color:var(--blue);font-weight:600">${c.date} ${c.level}</div>
+      <div style="margin-top:2px">${c.event}</div>
+    </div>`
+  ).join('');
+}
+
+function renderTicker() {
+  const items = [...MARKET_DATA, ...MARKET_DATA];
+  document.getElementById('ticker').innerHTML = items.map(m =>
+    `<div class="ticker-item ${m.dir}"><span>${m.name}</span><span>${m.price}</span><span>${m.change}</span></div>`
+  ).join('');
+}
+
+function loadReport(dateStr, navEl) {
+  // 更新导航激活状态
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  else document.querySelector('.nav-item').classList.add('active');
+
+  // 直接从内嵌数据读取
+  const content = document.getElementById('mainContent');
+  const md = REPORTS_DATA[dateStr] || '';
+  const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
+  content.innerHTML = `<div class="md-body">${marked.parse(cleanMd)}</div>`;
+}
+
 function startClock() {
   function update() {
     const now = new Date();
-    const options = { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', options);
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
   }
   update();
   setInterval(update, 1000);
 }
 
-// ─── 导航列表 ───
-function buildNavList() {
-  const container = document.getElementById('navList');
-  container.innerHTML = REPORTS.map((r, i) => `
-    <div class="nav-item ${i === 0 ? 'active' : ''}" onclick="loadReport(REPORTS[${i}], this)">
-      <div class="nav-date">${r.displayDate}（${r.weekday}）</div>
-      <div class="nav-summary">${r.summary}</div>
-      <span class="nav-badge ${r.badge}">Panic ${r.panicIndex}</span>
-    </div>
-  `).join('');
-}
-
-// ─── 加载日报 ───
-function loadReport(report, navEl) {
-  currentReport = report;
-
-  // 更新导航激活状态
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  if (navEl) navEl.classList.add('active');
-  else document.querySelectorAll('.nav-item')[0].classList.add('active');
-
-  // 更新右侧面板
-  updateRightPanel(report);
-
-  // 加载MD内容
-  const content = document.getElementById('mainContent');
-  content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><div>加载中...</div></div>`;
-
-  // 直接加载 .md 文件（GitHub Pages 现在正确服务未渲染的源文件）
-  fetch(report.activeFile + '?raw=' + Date.now())
-    .then(r => {
-      if (!r.ok) throw new Error('文件加载失败');
-      return r.text();
-    })
-    .then(md => {
-      // 移除 [Nav_Summary] 前置字段，防止显示在报告正文
-      const cleanMd = md.replace(/^\[Nav_Summary\].*\n?/gm, '').replace(/^\n+/, '');
-      const html = marked.parse(cleanMd);
-      content.innerHTML = `<div class="md-body">${html}</div>`;
-    })
-    .catch(() => {
-      // 如果失败，显示友好错误
-      content.innerHTML = `<div class="md-body" style="text-align:center;padding:40px;color:var(--text-muted)">
-        <p>📡 日报加载失败</p>
-        <p style="font-size:0.85rem;margin-top:10px">${report.title}</p>
-        <p style="font-size:0.75rem;margin-top:5px">请检查网络连接后刷新重试</p>
-      </div>`;
-    });
-}
-        <p style="font-size:14px">请检查网络连接后刷新重试</p>
-      </div>`;
-    });
-}
-
-// ─── 更新右侧面板 ───
-function updateRightPanel(report) {
-  // Panic Index
-  const pv = document.getElementById('panicValue');
-  pv.textContent = report.panicIndex;
-  pv.className = `panic-value ${report.panicLevel}`;
-  document.getElementById('panicLabel').textContent = `${report.panicLevelText} | ${report.panicDelta === '+10' ? '↑' : report.panicDelta.includes('-') ? '↓' : '→'}${report.panicDelta}`;
-  document.getElementById('panicBar').style.width = report.panicIndex + '%';
-
-  // 路径概率
-  const [pa, pb, pc] = report.pathProbs;
-  document.getElementById('pathA').innerHTML = `A路径<br><small>${pa}%</small>`;
-  document.getElementById('pathB').innerHTML = `B路径⭐<br><small>${pb}%</small>`;
-  document.getElementById('pathC').innerHTML = `C路径<br><small>${pc}%</small>`;
-}
-
-// ─── 日报从 MD 文件动态加载，不再使用硬编码内容 ───
-
-// ─── 启动 ───
-window.addEventListener('load', init);
+// 启动
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
